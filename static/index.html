@@ -46,11 +46,21 @@
   .helpbtn:hover{border-color:var(--brand);color:var(--brand-d);background:var(--brand-bg)}
   .helpbtn .q{display:inline-flex;align-items:center;justify-content:center;width:21px;height:21px;border-radius:50%;background:var(--brand);color:var(--on-brand);font-size:12.5px;font-weight:700;line-height:1}
 
-  .tabsbar{position:sticky;top:58px;z-index:20;background:var(--bg);border-bottom:1px solid var(--hair)}
-  .tabs{display:flex;gap:2px;overflow-x:auto;padding:8px 0;scrollbar-width:thin}
-  .tab{flex:none;cursor:pointer;border:none;background:none;padding:7px 13px;border-radius:999px;font-size:14px;color:var(--muted);white-space:nowrap}
+  .feedlayout{display:flex;align-items:flex-start;max-width:1140px;margin:0 auto}
+  .sidebar{position:sticky;top:58px;flex:none;width:212px;align-self:flex-start;max-height:calc(100vh - 58px);overflow-y:auto;padding:18px 12px;border-right:1px solid var(--hair);scrollbar-width:thin}
+  .sidehd{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--faint);padding:0 13px 9px;font-weight:600}
+  .feedmain{flex:1;min-width:0}
+  .tabs{display:flex;flex-direction:column;gap:3px}
+  .tab{cursor:pointer;border:none;background:none;text-align:left;width:100%;padding:9px 13px;border-radius:8px;font-size:14.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .tab:hover{background:var(--chip)} .tab.on{background:var(--brand);color:var(--on-brand);font-weight:600}
   .tab.add{color:var(--brand)}
+  @media(max-width:760px){
+    .feedlayout{flex-direction:column}
+    .sidebar{position:sticky;top:58px;z-index:20;width:auto;max-height:none;border-right:none;border-bottom:1px solid var(--hair);padding:8px 12px;background:var(--bg)}
+    .sidehd{display:none}
+    .tabs{flex-direction:row;overflow-x:auto;gap:2px}
+    .tab{width:auto;flex:none;border-radius:999px;padding:7px 13px}
+  }
 
   .toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:12px 0 4px}
   .seg{display:inline-flex;border:1px solid var(--hair);border-radius:999px;overflow:hidden;background:var(--surface)}
@@ -62,8 +72,18 @@
   .tagchip.on{background:var(--brand);color:var(--on-brand);border-color:var(--brand)}
 
   .list{padding:6px 0 70px}
-  .item{padding:16px 8px;border-bottom:1px solid var(--hair2);border-radius:8px;cursor:pointer}
+  .selbar{display:flex;align-items:center;gap:10px;padding:8px 8px;border-bottom:1px solid var(--hair);font-size:13px;color:var(--muted)}
+  .selbar .selall{display:inline-flex;align-items:center;gap:7px;cursor:pointer}
+  .selbar input[type=checkbox],.selbox{accent-color:var(--brand);cursor:pointer}
+  .selcount{font-size:13px;color:var(--faint)}
+  .trash{cursor:pointer;border:1px solid var(--hair);background:var(--surface);color:var(--muted);border-radius:8px;padding:6px 12px;font-size:13px;display:inline-flex;align-items:center;gap:6px;font-family:inherit}
+  .trash:hover:not(:disabled){border-color:var(--neg);color:var(--neg);background:var(--brand-bg)}
+  .trash:disabled{opacity:.45;cursor:default}
+  .item{display:flex;gap:11px;align-items:flex-start;padding:14px 8px;border-bottom:1px solid var(--hair2);border-radius:8px}
   .item:hover{background:var(--surface)}
+  .item.sel{background:var(--brand-bg)}
+  .selbox{margin-top:3px;width:17px;height:17px;flex:none}
+  .ibody{flex:1;min-width:0;cursor:pointer}
   .ttl{font-size:17px;font-weight:600;line-height:1.3;letter-spacing:-.2px}
   .item:hover .ttl{color:var(--brand-d)}
   .badges{display:flex;flex-wrap:wrap;gap:5px;margin:6px 0}
@@ -141,11 +161,13 @@
 </div></div>
 
 <section id="view-feed">
-  <div class="tabsbar"><div class="wrap"><div class="tabs" id="tabs"></div></div></div>
-  <div class="wrap">
-    <div id="toolbar"></div>
-    <div class="list" id="feed"></div>
-    <div class="status" id="status"></div>
+  <div class="feedlayout">
+    <aside class="sidebar"><div class="sidehd">Setores</div><div class="tabs" id="tabs"></div></aside>
+    <div class="feedmain"><div class="wrap">
+      <div id="toolbar"></div>
+      <div class="list" id="feed"></div>
+      <div class="status" id="status"></div>
+    </div></div>
   </div>
 </section>
 
@@ -159,7 +181,7 @@
 
 <script>
 let TABS=[], activeTab="", DATA={clusters:[]}, ART={}, cfgSel=null;
-let timeMode="all", dateVal="", fromVal="", toVal="", selTags=new Set();
+let timeMode="all", dateVal="", fromVal="", toVal="", selTags=new Set(), selClusters=new Set(), editMode=false;
 const jget=async u=>(await fetch(u)).json();
 const jsend=async(u,m,b)=>(await fetch(u,{method:m,headers:{"Content-Type":"application/json"},body:b?JSON.stringify(b):null})).json();
 const esc=s=>{const d=document.createElement("div");d.textContent=s==null?"":s;return d.innerHTML;};
@@ -203,6 +225,7 @@ async function loadFeed(){
     return;
   }
   DATA=await jget("/api/articles?"+feedQuery());
+  selClusters=new Set();   // seleção não persiste entre recargas (igual caixa de e-mail)
   ART={}; (DATA.clusters||[]).forEach(c=>{ART[c.lead.id]=c.lead;(c.others||[]).forEach(o=>ART[o.id]=o);});
   renderToolbar(); renderFeed();
 }
@@ -232,6 +255,7 @@ function renderToolbar(){
       <div class="seg">${segBtn("all","Tudo")}${segBtn("1h","1h")}${segBtn("2h","2h")}${segBtn("date","Dia")}${segBtn("range","Período")}</div>
       ${extra}
       <div class="grow"></div>
+      <button class="pill ${editMode?"primary":""}" onclick="toggleEdit()">${editMode?"✓ Concluir":"✎ Editar"}</button>
       <button class="pill" onclick="execSummary()">📋 Resumo Executivo</button>
     </div>${tagHtml}`;
 }
@@ -248,7 +272,10 @@ function card(c,i){
     others=`<button class="more" onclick="event.stopPropagation();toggleOthers(${i})">Ver outras ${c.size-1} fonte(s) ▾</button>
       <div class="others" id="oth-${i}">${list}</div>`;
   }
-  return `<div class="item" onclick="openArticle(${a.id})">
+  const on=selClusters.has(i);
+  return `<div class="item ${on?"sel":""}" id="item-${i}">
+    ${editMode?`<input type="checkbox" class="selbox" ${on?"checked":""} title="Selecionar" onclick="event.stopPropagation();toggleSel(${i},this.checked)">`:""}
+    <div class="ibody" onclick="openArticle(${a.id})">
     <div class="ttl">${esc(a.title)}</div>
     ${badges?`<div class="badges">${badges}</div>`:""}
     ${a.snippet?`<div class="snippet">${esc(a.snippet)}</div>`:""}
@@ -257,16 +284,54 @@ function card(c,i){
       ${c.size>1?`<span class="sep">·</span><span>${c.sources.length} fontes</span>`:""}
       <span class="sep">·</span>
       <a class="ler" href="${esc(a.url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">site ↗</a></div>
-    ${others}</div>`;
+    ${others}</div></div>`;
+}
+function selBar(total){
+  return `<div class="selbar">
+    <label class="selall"><input type="checkbox" id="selAll" onclick="toggleAll(this.checked)"> Selecionar todas</label>
+    <span class="grow"></span>
+    <span id="selcount" class="selcount"></span>
+    <button class="trash" id="trashBtn" onclick="deleteSelected()" disabled title="Apagar selecionadas">🗑 Apagar</button>
+  </div>`;
 }
 function renderFeed(){
   const cl=DATA.clusters||[];
-  document.getElementById("feed").innerHTML = cl.length? cl.map((c,i)=>card(c,i)).join("")
+  document.getElementById("feed").innerHTML = cl.length? (editMode?selBar(cl.length):"")+cl.map((c,i)=>card(c,i)).join("")
     : `<div class="empty">Nenhuma notícia com os filtros atuais.<br>Clique em <b>Coletar</b> ou ajuste os filtros.</div>`;
+  if(editMode) updateSelBar();
   const nm=activeTab===""?"Todas":(TABS.find(t=>t.id==activeTab)||{}).name;
   document.getElementById("status").textContent=`${cl.length} assunto(s) · ${nm}`;
 }
 function toggleOthers(i){document.getElementById("oth-"+i).classList.toggle("open");}
+
+// ---- seleção / exclusão em massa (estilo caixa de e-mail) ----
+function toggleEdit(){editMode=!editMode; if(!editMode) selClusters=new Set(); renderToolbar(); renderFeed();}
+function toggleSel(i,checked){
+  if(checked)selClusters.add(i);else selClusters.delete(i);
+  const el=document.getElementById("item-"+i); if(el) el.classList.toggle("sel",checked);
+  updateSelBar();
+}
+function toggleAll(checked){
+  const cl=DATA.clusters||[];
+  selClusters = checked ? new Set(cl.map((_,i)=>i)) : new Set();
+  renderFeed();
+}
+function updateSelBar(){
+  const total=(DATA.clusters||[]).length, n=selClusters.size;
+  const cnt=document.getElementById("selcount"); if(cnt) cnt.textContent=n?`${n} selecionada(s)`:"";
+  const tb=document.getElementById("trashBtn"); if(tb) tb.disabled=!n;
+  const sa=document.getElementById("selAll"); if(sa){sa.checked=n>0&&n===total; sa.indeterminate=n>0&&n<total;}
+}
+async function deleteSelected(){
+  const idxs=[...selClusters]; if(!idxs.length) return;
+  const ids=[];
+  idxs.forEach(i=>{const c=(DATA.clusters||[])[i]; if(!c)return; ids.push(c.lead.id); (c.others||[]).forEach(o=>ids.push(o.id));});
+  if(!ids.length) return;
+  if(!confirm(`Apagar ${idxs.length} notícia(s) selecionada(s)?\nIsso remove ${ids.length} item(ns) do banco e não pode ser desfeito.`)) return;
+  const r=await jsend("/api/articles/delete","POST",{ids});
+  await loadFeed();
+  document.getElementById("status").textContent=`${(r&&r.removed)||0} item(ns) apagado(s).`;
+}
 
 // ---- POPUP ----
 async function openArticle(id){
@@ -317,44 +382,65 @@ async function execSummary(){
 function copyJson(s){navigator.clipboard&&navigator.clipboard.writeText(s);}
 
 // ---- Como usar (ajuda + prompt para IA) ----
-const AI_PROMPT=`Quero montar um painel de monitoramento de notícias (clipping) sobre um tema. Gere a configuração para mim.
+const AI_PROMPT=`Você é um especialista em monitoramento de imprensa (clipping). Vou te dar um tema e você vai montar a configuração completa de um painel de notícias.
 
-TEMA QUE QUERO ACOMPANHAR: <descreva aqui o setor, empresa, assunto ou região>
+==== TEMA QUE QUERO ACOMPANHAR ====
+<descreva aqui em 1-3 linhas: setor, empresa, produto, concorrentes, região ou assunto. Quanto mais contexto, melhor.>
 
-Responda EXATAMENTE neste formato, sem explicações extras:
+==== COMO O PAINEL FUNCIONA (para você calibrar a resposta) ====
+- PREFERENCIAS: uma notícia só aparece na aba se contiver ALGUMA dessas palavras (filtro de inclusão). Use termos amplos e centrais do tema.
+- BLACKLIST: se a notícia contiver ALGUMA dessas palavras, ela é descartada (filtro de ruído).
+- TAGS: subtemas. Cada tag tem palavras-chave; quando batem, viram etiqueta no card e filtro no feed.
+- BUSCAS_GOOGLE_NEWS: termos que serão pesquisados no Google News e trazidos direto para esta aba (vão além do que os sites RSS publicam). Use frases específicas, com nomes próprios.
+- SITES_RSS: sites/portais com feed RSS que cobrem bem o tema (valem para o painel todo).
+- O sistema ignora acentos e maiúsculas ao comparar. Notícias só da semana atual.
 
-NOME: <nome curto para a aba>
+==== RESPONDA EXATAMENTE NESTE FORMATO (sem comentários, sem markdown) ====
+NOME: <nome curto da aba, ex.: Mercado Financeiro>
 
-PREFERENCIAS: <palavras-chave separadas por vírgula que uma notícia precisa conter para aparecer>
+PREFERENCIAS: palavra1, palavra2, palavra3, ...
 
-BLACKLIST: <palavras separadas por vírgula que devem excluir a notícia>
+BLACKLIST: palavra1, palavra2, ...
 
 TAGS:
-<Nome da Tag 1>: <palavra1, palavra2, palavra3>
-<Nome da Tag 2>: <palavra1, palavra2, palavra3>
+<Nome da Tag 1>: palavra1, palavra2, palavra3
+<Nome da Tag 2>: palavra1, palavra2, palavra3
+<Nome da Tag 3>: palavra1, palavra2, palavra3
 
-Regras:
-- PREFERENCIAS: termos amplos e centrais do tema.
-- BLACKLIST: termos que costumam gerar ruído (promoção, sorteio, horóscopo, cupom, etc.).
-- TAGS: subtemas relevantes; crie de 4 a 8 tags, cada uma com 3 a 8 palavras-chave.
-- Pode usar acentos e maiúsculas — o sistema ignora os dois na hora de comparar.
-- Mantenha exatamente este formato para eu copiar e colar direto no aplicativo.`;
+BUSCAS_GOOGLE_NEWS:
+<termo de busca 1, ex.: "Petrobras dividendos">
+<termo de busca 2>
+<termo de busca 3>
+
+SITES_RSS:
+<Nome do site | URL do feed RSS>
+<Nome do site | URL do feed RSS>
+
+==== REGRAS ====
+- PREFERENCIAS: 6 a 15 termos.
+- BLACKLIST: inclua ruídos comuns (promoção, cupom, sorteio, horóscopo, novela, apostas) + ruídos específicos do tema.
+- TAGS: de 4 a 8 tags, cada uma com 3 a 8 palavras-chave.
+- BUSCAS_GOOGLE_NEWS: de 4 a 10 buscas específicas (nomes de empresas, pessoas, produtos, eventos). Uma por linha.
+- SITES_RSS: sugira de 4 a 8 portais confiáveis para o tema, com a URL do RSS. Se não tiver certeza da URL exata do feed, indique a página inicial do site e avise que devo confirmar o endereço do RSS.
+- Não escreva nada fora do formato acima.`;
 
 function showHelp(){
   showOverlay(`
     <div class="mhead"><button class="mclose" onclick="closeModal()">✕</button></div>
     <div class="mtitle">Como usar o Clipping News</div>
     <div class="exsum">
-      <p>O Clipping News reúne notícias de várias fontes (RSS e Google News) e organiza por <b>abas (setores)</b> que você cria. Cada aba tem seus próprios filtros e tags.</p>
+      <p>O Clipping News reúne notícias e organiza por <b>abas (setores)</b>, que ficam na <b>barra lateral</b> à esquerda. Cada aba tem filtros, tags e buscas próprias.</p>
       <h4>Os campos de cada aba</h4>
-      <div class="exitem"><b>Preferências</b><div class="x">Palavras que a notícia precisa conter para aparecer na aba. Separe por vírgula. Deixe vazio para aceitar tudo.</div></div>
-      <div class="exitem"><b>Blacklist</b><div class="x">Palavras que excluem a notícia (ruído, promoções, etc.). Separe por vírgula.</div></div>
-      <div class="exitem"><b>Tags</b><div class="x">Subtemas com palavras-chave. Viram etiquetas nos cards e filtros no topo do feed. A busca ignora acentos e maiúsculas.</div></div>
-      <h4>Importar várias tags de uma vez</h4>
-      <p>No editor da aba, use o campo <b>"Importar várias tags"</b>. Uma tag por linha, no formato:</p>
-      <p><code>Nome da tag: palavra1, palavra2, palavra3</code></p>
-      <h4>Gerar a configuração com uma IA</h4>
-      <p>Copie o prompt abaixo, cole numa IA (ChatGPT, Claude, Gemini...) e troque o trecho do tema. A IA devolve <b>Nome</b>, <b>Preferências</b>, <b>Blacklist</b> e <b>Tags</b> prontos: cole cada parte no campo correspondente e o bloco de TAGS no campo "Importar várias tags".</p>
+      <div class="exitem"><b>Preferências</b><div class="x">Palavras que a notícia precisa conter para aparecer na aba (separe por vírgula). Vazio = aceita tudo.</div></div>
+      <div class="exitem"><b>Blacklist</b><div class="x">Palavras que excluem a notícia (ruído, promoções, etc.).</div></div>
+      <div class="exitem"><b>Tags</b><div class="x">Subtemas com palavras-chave. Viram etiquetas nos cards e filtros no feed.</div></div>
+      <div class="exitem"><b>Buscas no Google News</b><div class="x">Termos pesquisados no Google News <b>só desta aba</b>. As notícias encontradas entram nesta aba mesmo sem casar com as Preferências.</div></div>
+      <h4>Importações em massa</h4>
+      <p><b>Tags</b> — uma por linha: <code>Nome da tag: palavra1, palavra2</code></p>
+      <p><b>Buscas Google News</b> — uma por linha (só o termo).</p>
+      <p><b>Sites (RSS)</b> — em ⚙ Fontes, uma por linha: <code>Nome | https://site/feed</code></p>
+      <h4>Gerar tudo com uma IA</h4>
+      <p>Copie o prompt abaixo, cole numa IA (ChatGPT, Claude, Gemini...) e descreva o tema. A IA devolve <b>NOME</b>, <b>PREFERENCIAS</b>, <b>BLACKLIST</b>, <b>TAGS</b>, <b>BUSCAS_GOOGLE_NEWS</b> e <b>SITES_RSS</b>. Cole cada bloco no campo correspondente (TAGS e BUSCAS nos importadores da aba; SITES_RSS em ⚙ Fontes).</p>
       <textarea id="promptBox" class="promptbox" readonly>${esc(AI_PROMPT)}</textarea>
       <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
         <button class="pill primary" id="copyPromptBtn" onclick="copyPromptBox()">Copiar prompt</button>
@@ -444,8 +530,22 @@ async function renderCfgBody(){
       </div>
       <div id="tags"></div>
     </div>
+    <div class="section"><h3>Buscas no Google News (desta aba)</h3>
+      <p class="hint">Termos de busca que valem <b>só nesta aba</b>. As notícias encontradas aparecem aqui mesmo que não casem com as Preferências.</p>
+      <div class="form">
+        <div class="field" style="flex:2;min-width:200px"><label>Termo de busca</label><input id="q-term" placeholder="Ex.: Petrobras dividendos"></div>
+        <button class="pill primary" onclick="addSearch(${t.id})">Adicionar busca</button>
+      </div>
+      <div class="form" style="border-top:1px solid var(--hair2);padding-top:14px">
+        <div class="field" style="min-width:100%"><label>Importar várias buscas (uma por linha)</label>
+          <textarea id="q-bulk" rows="4" placeholder="Petrobras dividendos&#10;Vale minério de ferro&#10;Selic Copom decisão"></textarea></div>
+        <button class="pill primary" onclick="bulkAddSearches(${t.id})">Importar buscas</button>
+        <button class="mini" onclick="showHelp()">? Como gerar com IA</button>
+      </div>
+      <div id="searches"></div>
+    </div>
   </div>`;
-  loadTags(t.id);
+  loadTags(t.id); loadSearches(t.id);
 }
 async function saveTab(id){const name=document.getElementById("t-name").value.trim();if(!name)return alert("Nome obrigatório.");
   await jsend(`/api/tabs/${id}`,"PUT",{name,preferences:document.getElementById("t-pref").value.trim(),blacklist:document.getElementById("t-bl").value.trim()});
@@ -489,26 +589,42 @@ async function bulkAddTags(tid){
   if(!added) alert("Nada importado. Use o formato 'Nome: palavra1, palavra2' (uma tag por linha).");
 }
 
+async function loadSearches(tid){
+  const S=await jget(`/api/tabs/${tid}/searches`);
+  document.getElementById("searches").innerHTML=S.length?S.map(s=>`
+    <div class="row"><div class="info"><b>🔎 ${esc(s.term)}</b><div class="sub">busca no Google News</div></div>
+    <div class="acts"><button class="mini danger" onclick="delSearch(${s.id},${tid})">remover</button></div></div>`).join("")
+    :`<p class="hint">Nenhuma busca ainda.</p>`;
+}
+async function addSearch(tid){const term=document.getElementById("q-term").value.trim();
+  if(!term)return alert("Digite um termo de busca.");
+  await jsend(`/api/tabs/${tid}/searches`,"POST",{term});document.getElementById("q-term").value="";loadSearches(tid);}
+async function bulkAddSearches(tid){
+  const box=document.getElementById("q-bulk");let added=0;
+  for(const raw of box.value.split("\n")){const term=raw.trim();if(!term||term.startsWith("#"))continue;
+    await jsend(`/api/tabs/${tid}/searches`,"POST",{term});added++;}
+  box.value="";loadSearches(tid);
+  if(!added)alert("Nada importado. Uma busca por linha.");
+}
+const delSearch=(id,tid)=>fetch(`/api/searches/${id}`,{method:"DELETE"}).then(()=>loadSearches(tid));
+
 async function renderSourcesCfg(){
   document.getElementById("cfgbody").innerHTML=`
-  <div class="card"><div class="section"><h3>Fontes</h3>
-    <p class="hint">RSS (URL do feed) ou busca do Google News (só o termo). Valem para todas as abas.</p>
+  <div class="card"><div class="section"><h3>Sites (RSS)</h3>
+    <p class="hint">Sites com feed <b>RSS</b> — valem para <b>todas</b> as abas. As buscas do Google News agora ficam dentro de cada aba.</p>
     <div class="form">
-      <div class="field" style="flex:1;min-width:120px"><label>Nome</label><input id="s-name" placeholder="Ex.: InfoMoney"></div>
-      <div class="field"><label>Tipo</label><select id="s-type" onchange="hintType()"><option value="rss">RSS</option><option value="google_news">Busca Google News</option></select></div>
-      <div class="field" style="flex:2;min-width:160px"><label>URL ou termo</label><input id="s-value" placeholder="https://site.com/feed/"></div>
+      <div class="field" style="flex:1;min-width:140px"><label>Nome do site</label><input id="s-name" placeholder="Ex.: InfoMoney"></div>
+      <div class="field" style="flex:2;min-width:200px"><label>URL do RSS</label><input id="s-value" placeholder="https://site.com/feed/"></div>
       <button class="pill primary" onclick="addSource()">Adicionar</button>
     </div>
     <div class="form" style="border-top:1px solid var(--hair2);padding-top:14px">
-      <div class="field" style="min-width:100%"><label>Importar várias fontes (uma por linha → <b>Nome | URL ou termo</b>)</label>
-        <textarea id="s-bulk" rows="5" placeholder="InfoMoney | https://www.infomoney.com.br/feed/&#10;G1 Economia | https://g1.globo.com/rss/g1/economia/&#10;Ibovespa | ibovespa B3&#10;https://valor.globo.com/rss"></textarea></div>
-      <button class="pill primary" onclick="bulkAddSources()">Importar fontes</button>
+      <div class="field" style="min-width:100%"><label>Importar vários sites (uma por linha → <b>Nome | URL do RSS</b>)</label>
+        <textarea id="s-bulk" rows="5" placeholder="InfoMoney | https://www.infomoney.com.br/feed/&#10;G1 Economia | https://g1.globo.com/rss/g1/economia/&#10;https://valor.globo.com/rss"></textarea></div>
+      <button class="pill primary" onclick="bulkAddSources()">Importar sites</button>
     </div>
-    <p class="hint" style="margin-top:2px">Detecta o tipo sozinho: começa com <b>http</b> vira RSS, senão vira busca no Google News. Para forçar: <code>Nome | rss | URL</code> ou <code>Nome | google_news | termo</code>.</p>
     <div id="sources"></div></div></div>`;
   loadSources();
 }
-function hintType(){const t=document.getElementById("s-type").value,v=document.getElementById("s-value");v.placeholder=t==="google_news"?"ibovespa B3":"https://site.com/feed/";}
 async function loadSources(){
   const S=await jget("/api/sources");
   document.getElementById("sources").innerHTML=S.length?S.map(s=>`
@@ -518,28 +634,30 @@ async function loadSources(){
       <button class="mini danger" onclick="delSrc(${s.id})">remover</button></div></div>`).join("")
     :`<p class="hint">Nenhuma fonte ainda.</p>`;
 }
-async function addSource(){const name=document.getElementById("s-name").value.trim(),type=document.getElementById("s-type").value,value=document.getElementById("s-value").value.trim();
-  if(!name||!value)return alert("Preencha nome e URL/termo.");
-  await jsend("/api/sources","POST",{name,type,value});document.getElementById("s-name").value="";document.getElementById("s-value").value="";loadSources();}
+async function addSource(){const name=document.getElementById("s-name").value.trim(),value=document.getElementById("s-value").value.trim();
+  if(!name||!value)return alert("Preencha nome e URL do RSS.");
+  if(!/^https?:\/\//i.test(value))return alert("A URL do RSS precisa começar com http(s).");
+  await jsend("/api/sources","POST",{name,type:"rss",value});document.getElementById("s-name").value="";document.getElementById("s-value").value="";loadSources();}
 function srcNameFrom(v){try{return new URL(v).hostname.replace(/^www\./,"");}catch(e){return v.slice(0,40);}}
 async function bulkAddSources(){
   const box=document.getElementById("s-bulk");
-  let added=0;
+  let added=0,skipped=0;
   for(const raw of box.value.split("\n")){
     const line=raw.trim(); if(!line||line.startsWith("#")) continue;
     const parts=line.split("|").map(s=>s.trim());
-    let name,type,value;
-    if(parts.length>=3){ name=parts[0]; type=/google/i.test(parts[1])?"google_news":"rss"; value=parts.slice(2).join("|").trim(); }
-    else if(parts.length===2){ name=parts[0]; value=parts[1]; }
+    let name,value;
+    if(parts.length>=3 && /^(rss|google_news)$/i.test(parts[1])){ name=parts[0]; value=parts.slice(2).join("|").trim(); }
+    else if(parts.length>=2){ name=parts[0]; value=parts.slice(1).join("|").trim(); }
     else { value=parts[0]; name=srcNameFrom(value); }
-    if(!name||!value) continue;
-    if(!type) type=/^https?:\/\//i.test(value)?"rss":"google_news";
-    await jsend("/api/sources","POST",{name,type,value});
+    if(!/^https?:\/\//i.test(value||"")){ skipped++; continue; }  // só RSS (URL); termos vão nas abas
+    if(!name) name=srcNameFrom(value);
+    await jsend("/api/sources","POST",{name,type:"rss",value});
     added++;
   }
   box.value="";
   loadSources();
-  if(!added) alert("Nada importado. Use uma fonte por linha: 'Nome | URL ou termo'.");
+  if(!added) alert("Nada importado. Use 'Nome | https://site/feed' (uma URL de RSS por linha).");
+  else if(skipped) alert(`${added} site(s) importado(s). ${skipped} linha(s) ignorada(s) por não ter URL — termos de busca agora vão dentro de cada aba.`);
 }
 const toggleSrc=(id,a)=>jsend(`/api/sources/${id}`,"PATCH",{active:!!a}).then(loadSources);
 const delSrc=id=>fetch(`/api/sources/${id}`,{method:"DELETE"}).then(loadSources);

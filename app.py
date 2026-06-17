@@ -52,6 +52,10 @@ class TagIn(BaseModel):
     tab_id: int; name: str; keywords: str = ""
 class TagEditIn(BaseModel):
     name: str; keywords: str = ""
+class SearchIn(BaseModel):
+    term: str
+class IdsIn(BaseModel):
+    ids: list[int] = []
 
 def _kw(s): return [w.strip() for w in (s or "").split(",") if w.strip()]
 
@@ -97,6 +101,16 @@ def put_tag(tid: int, t: TagEditIn): db.update_tag(tid, t.name, t.keywords); ret
 @app.delete("/api/tags/{tid}")
 def del_tag(tid: int): db.delete_tag(tid); return {"ok": True}
 
+# ---------- buscas Google News por aba ----------
+@app.get("/api/tabs/{tid}/searches")
+def get_searches(tid: int): return db.list_searches(tid)
+@app.post("/api/tabs/{tid}/searches")
+def post_search(tid: int, s: SearchIn):
+    if not s.term.strip(): raise HTTPException(400, "termo obrigatório")
+    return {"id": db.add_search(tid, s.term)}
+@app.delete("/api/searches/{sid}")
+def del_search(sid: int): db.delete_search(sid); return {"ok": True}
+
 # ---------- helpers de filtro ----------
 def _tab_pass(a, tab):
     blob = (a.get("title") or "") + " " + (a.get("snippet") or "")
@@ -106,15 +120,20 @@ def _tab_pass(a, tab):
     if pref and not matches_any_word(blob, pref): return False
     return True
 
+def _belongs(a, tab, links):
+    """A notícia pertence à aba se passa no filtro OU foi trazida por uma busca da aba."""
+    return _tab_pass(a, tab) or a["id"] in links.get(tab["id"], set())
+
 def _purge_exclusive_articles(tid):
-    """Apaga notícias que passam SÓ no filtro desta aba (em nenhuma outra restante)."""
+    """Apaga notícias que pertencem SÓ a esta aba (em nenhuma outra restante)."""
     tabs = db.list_tabs()
     target = next((t for t in tabs if t["id"] == tid), None)
     if not target:
         return 0
     others = [t for t in tabs if t["id"] != tid]
+    links = db.article_tab_links()
     ids = [a["id"] for a in db.list_articles(limit=10**9)
-           if _tab_pass(a, target) and not any(_tab_pass(a, o) for o in others)]
+           if _belongs(a, target, links) and not any(_belongs(a, o, links) for o in others)]
     return db.delete_articles(ids)
 
 def _parse_dt(s):
@@ -148,12 +167,13 @@ def _build_feed(tab, q, since_hours, date_s, from_s, to_s, tag_filter, group=Tru
     tabs_by_id = {t["id"]: t for t in tabs}
     # escopo: aba específica ou "Todas" (união do que passou em qualquer aba)
     arts = db.list_articles(limit=3000)
+    links = db.article_tab_links()   # {tab_id: set(article_ids)} trazidos pelas buscas das abas
     if tab.strip().isdigit() and int(tab) in tabs_by_id:
         t = tabs_by_id[int(tab)]
-        scope = [a for a in arts if _tab_pass(a, t)]
+        scope = [a for a in arts if _belongs(a, t, links)]
         tagdefs = db.list_tags(tab_id=t["id"])
     else:  # Todas
-        scope = [a for a in arts if any(_tab_pass(a, t) for t in tabs)]
+        scope = [a for a in arts if any(_belongs(a, t, links) for t in tabs)]
         tagdefs = db.list_tags()  # união das tags de todas as abas
     ql = q.strip().lower()
     sel = []
@@ -174,6 +194,10 @@ def _build_feed(tab, q, since_hours, date_s, from_s, to_s, tag_filter, group=Tru
     return {"no_tabs": False, "clusters": clusters, "available_tags": available}
 
 # ---------- feed ----------
+@app.post("/api/articles/delete")
+def delete_articles_ep(b: IdsIn):
+    return {"ok": True, "removed": db.delete_articles(b.ids)}
+
 @app.get("/api/articles")
 def get_articles(tab: str = "", q: str = "", since_hours: float = 0, date: str = "",
                  dt_from: str = "", dt_to: str = "", tags: str = "", group: int = 1):

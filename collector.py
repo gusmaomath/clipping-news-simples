@@ -63,8 +63,8 @@ def _fetch_feed(url, client):
     except Exception:
         return feedparser.parse(url).entries  # fallback sem proxy
 
-def _entries(src, client, week_start):
-    url = src["value"] if src["type"] == "rss" else google_news_url(src["value"])
+def _fetch_items(url, meta, client, week_start):
+    """Baixa um feed e devolve itens. `meta` carrega source_id/source_name/tab_id."""
     out = []
     for e in _fetch_feed(url, client)[:config.MAX_PER_SOURCE]:
         link, title = e.get("link"), e.get("title")
@@ -73,10 +73,24 @@ def _entries(src, client, week_start):
         pub = _published(e)
         if pub is None or pub < week_start:      # recência estrita: só a semana atual
             continue
-        out.append({"title": clean(title), "url": link, "source_id": src["id"],
-                    "source_name": src["name"], "snippet": clean(e.get("summary") or e.get("description") or "")[:300],
-                    "published_at": pub.isoformat(), "image_url": _image(e)})
+        out.append({"title": clean(title), "url": link, "source_id": meta.get("source_id"),
+                    "source_name": meta.get("source_name"),
+                    "snippet": clean(e.get("summary") or e.get("description") or "")[:300],
+                    "published_at": pub.isoformat(), "image_url": _image(e),
+                    "tab_id": meta.get("tab_id")})
     return out
+
+def _collect_jobs():
+    """Monta a lista de feeds a baixar: fontes RSS globais + buscas Google News por aba."""
+    jobs = []
+    for s in db.list_sources(active_only=True):
+        url = s["value"] if s["type"] == "rss" else google_news_url(s["value"])
+        jobs.append((url, {"source_id": s["id"], "source_name": s["name"], "tab_id": None}))
+    for q in db.list_all_searches():
+        jobs.append((google_news_url(q["term"]),
+                     {"source_id": None, "source_name": f"Google News · {q['term']}",
+                      "tab_id": q["tab_id"]}))
+    return jobs
 
 # ===========================================================================
 # STUBS DE IA (futuro) — onde plugar a inteligência ANTES de salvar no banco.
@@ -98,7 +112,7 @@ def _entries(src, client, week_start):
 # ===========================================================================
 
 def collect_all():
-    sources = db.list_sources(active_only=True)
+    jobs = _collect_jobs()
     # blacklist PRÉ-BANCO: união das blacklists de todas as abas
     bl = []
     for t in db.list_tabs():
@@ -108,27 +122,30 @@ def collect_all():
     items = []
     with _client() as client:
         with ThreadPoolExecutor(max_workers=config.MAX_WORKERS) as pool:
-            futs = {pool.submit(_entries, s, client, week_start): s for s in sources}
+            futs = [pool.submit(_fetch_items, url, meta, client, week_start) for url, meta in jobs]
             for fut in as_completed(futs):
                 try: items.extend(fut.result())
                 except Exception: pass
 
     added, blocked, dup = 0, 0, 0
-    seen = set()
+    hash_to_id = {}             # hash -> id do artigo já garantido no banco nesta rodada
     for it in items:
         h = db.url_hash(it["url"])
-        if h in seen:               # dedup dentro da própria rodada
-            continue
-        seen.add(h)
         # barreira de filtros antes do banco
         if bl and matches_any_word(it["title"] + " " + it["snippet"], bl):
             blocked += 1
             continue
-        if db.exists_hash(h):       # trava definitiva: já existe -> nunca duplica
-            dup += 1
-            continue
-        # (futuro) aqui entraria _ai_filtro_semantico / _ai_resumir antes de salvar
-        if db.insert_article(it):
-            added += 1
-    return {"checked": len(seen), "added": added, "blocked": blocked, "duplicates": dup,
+        if h in hash_to_id:
+            aid = hash_to_id[h]
+        elif db.exists_hash(h):     # já existia em rodadas anteriores
+            aid = db.article_id_by_hash(h); dup += 1; hash_to_id[h] = aid
+        else:
+            # (futuro) aqui entraria _ai_filtro_semantico / _ai_resumir antes de salvar
+            aid = db.insert_article(it)
+            if aid: added += 1
+            hash_to_id[h] = aid
+        # vincula a notícia à aba que a trouxe (busca da aba)
+        if aid and it.get("tab_id"):
+            db.link_article_tab(aid, it["tab_id"])
+    return {"checked": len(hash_to_id), "added": added, "blocked": blocked, "duplicates": dup,
             "week_start": week_start.isoformat()}

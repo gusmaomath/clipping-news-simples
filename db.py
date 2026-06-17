@@ -27,6 +27,18 @@ CREATE TABLE IF NOT EXISTS tab_tags (
     keywords TEXT NOT NULL DEFAULT '',
     created_at TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS tab_searches (        -- buscas Google News POR ABA
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    tab_id INTEGER NOT NULL,
+    term TEXT NOT NULL,
+    active INTEGER NOT NULL DEFAULT 1,
+    created_at TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS article_tabs (        -- vínculo notícia -> aba (busca da aba)
+    article_id INTEGER NOT NULL,
+    tab_id INTEGER NOT NULL,
+    PRIMARY KEY (article_id, tab_id)
+);
 CREATE TABLE IF NOT EXISTS articles (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     title TEXT NOT NULL,
@@ -39,7 +51,20 @@ CREATE TABLE IF NOT EXISTS articles (
     image_url TEXT
 );
 CREATE INDEX IF NOT EXISTS idx_articles_pub ON articles(published_at DESC);
+CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value TEXT);
 """
+
+# Sites RSS pré-cadastrados no primeiro uso (fontes globais).
+DEFAULT_SOURCES = [
+    ("G1",                 "https://g1.globo.com/rss/g1/"),
+    ("InfoMoney",          "https://www.infomoney.com.br/feed/"),
+    ("Valor (mais lidas)", "https://valor.globo.com/rss/"),
+    ("Folha - Mercado",    "https://feeds.folha.uol.com.br/mercado/rss091.xml"),
+    ("Agência Brasil",     "https://agenciabrasil.ebc.com.br/rss/ultimasnoticias/feed.xml"),
+    ("BBC News Brasil",    "https://www.bbc.com/portuguese/index.xml"),
+    ("CNN Brasil",         "https://www.cnnbrasil.com.br/feed/"),
+    ("Exame",              "https://exame.com/feed/"),
+]
 
 def url_hash(url):
     return hashlib.sha1((url or "").strip().lower().encode("utf-8")).hexdigest()
@@ -64,6 +89,13 @@ def init_db():
         if "include_kw" in tc and "preferences" in tc:
             c.execute("UPDATE tabs SET preferences=include_kw WHERE preferences=''")
             c.execute("UPDATE tabs SET blacklist=exclude_kw WHERE blacklist=''")
+        # semeia sites RSS padrão só uma vez (banco novo, sem fontes ainda)
+        if not c.execute("SELECT 1 FROM meta WHERE key='seeded_defaults'").fetchone():
+            if c.execute("SELECT COUNT(*) FROM sources").fetchone()[0] == 0:
+                for name, url in DEFAULT_SOURCES:
+                    c.execute("INSERT INTO sources (name,type,value,active,created_at) VALUES (?,?,?,1,?)",
+                              (name, "rss", url, now_iso()))
+            c.execute("INSERT OR REPLACE INTO meta (key,value) VALUES ('seeded_defaults','1')")
 
 def now_iso(): return datetime.now(timezone.utc).isoformat()
 
@@ -109,6 +141,37 @@ def delete_tab(tid):
     with get_conn() as c:
         c.execute("DELETE FROM tabs WHERE id=?", (tid,))
         c.execute("DELETE FROM tab_tags WHERE tab_id=?", (tid,))
+        c.execute("DELETE FROM tab_searches WHERE tab_id=?", (tid,))
+        c.execute("DELETE FROM article_tabs WHERE tab_id=?", (tid,))
+
+# ---- buscas Google News por aba ----
+def list_searches(tab_id):
+    with get_conn() as c:
+        return [dict(r) for r in c.execute(
+            "SELECT * FROM tab_searches WHERE tab_id=? ORDER BY id", (tab_id,)).fetchall()]
+def list_all_searches():
+    with get_conn() as c:
+        return [dict(r) for r in c.execute(
+            "SELECT * FROM tab_searches WHERE active=1").fetchall()]
+def add_search(tab_id, term):
+    with get_conn() as c:
+        return c.execute("INSERT INTO tab_searches (tab_id,term,active,created_at) VALUES (?,?,1,?)",
+                         (tab_id, term.strip(), now_iso())).lastrowid
+def delete_search(sid):
+    with get_conn() as c: c.execute("DELETE FROM tab_searches WHERE id=?", (sid,))
+
+# ---- vínculo notícia <-> aba ----
+def link_article_tab(article_id, tab_id):
+    with get_conn() as c:
+        c.execute("INSERT OR IGNORE INTO article_tabs (article_id,tab_id) VALUES (?,?)",
+                  (article_id, tab_id))
+def article_tab_links():
+    """Devolve {tab_id: set(article_ids)} das notícias trazidas pelas buscas das abas."""
+    out = {}
+    with get_conn() as c:
+        for r in c.execute("SELECT tab_id, article_id FROM article_tabs").fetchall():
+            out.setdefault(r["tab_id"], set()).add(r["article_id"])
+    return out
 
 # ---- tags (por aba) ----
 def list_tags(tab_id=None):
@@ -133,16 +196,21 @@ def exists_hash(h):
     with get_conn() as c:
         return c.execute("SELECT 1 FROM articles WHERE url_hash=? LIMIT 1", (h,)).fetchone() is not None
 def insert_article(a):
+    """Insere e devolve o id (ou None se já existia)."""
     h = url_hash(a["url"])
     with get_conn() as c:
         try:
-            c.execute("INSERT INTO articles (title,url,url_hash,source_id,source_name,snippet,published_at,fetched_at,image_url) "
+            cur = c.execute("INSERT INTO articles (title,url,url_hash,source_id,source_name,snippet,published_at,fetched_at,image_url) "
                       "VALUES (?,?,?,?,?,?,?,?,?)",
                       (a["title"], a["url"], h, a.get("source_id"), a.get("source_name"),
                        a.get("snippet"), a.get("published_at"), now_iso(), a.get("image_url")))
-            return True
+            return cur.lastrowid
         except sqlite3.IntegrityError:
-            return False
+            return None
+def article_id_by_hash(h):
+    with get_conn() as c:
+        r = c.execute("SELECT id FROM articles WHERE url_hash=?", (h,)).fetchone()
+        return r["id"] if r else None
 def list_articles(limit=2000):
     with get_conn() as c:
         return [dict(r) for r in c.execute(
@@ -162,4 +230,5 @@ def delete_articles(ids):
     if not ids: return 0
     with get_conn() as c:
         c.executemany("DELETE FROM articles WHERE id=?", [(i,) for i in ids])
+        c.executemany("DELETE FROM article_tabs WHERE article_id=?", [(i,) for i in ids])
     return len(ids)
