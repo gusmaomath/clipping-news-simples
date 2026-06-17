@@ -25,10 +25,11 @@
   .grow{flex:1}.hidden{display:none!important}
 
   .top{position:sticky;top:0;z-index:30;background:var(--bg);border-bottom:1px solid var(--hair)}
-  .top .wrap{display:flex;align-items:center;gap:10px;height:58px}
+  .top .wrap{display:flex;align-items:center;gap:12px;height:58px;max-width:1140px}
+  .topacts{display:flex;align-items:center;gap:8px;margin-left:auto;flex:none}
   .brand{font-weight:800;font-size:20px;letter-spacing:-.4px;display:flex;align-items:center;gap:7px;color:var(--ink)}
   .brand .dot{width:9px;height:9px;border-radius:50%;background:var(--brand)} .brand b{color:var(--brand)}
-  .search{position:relative;display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--hair);border-radius:999px;padding:8px 14px;min-width:180px;max-width:480px;flex:1;transition:border-color .15s,box-shadow .15s}
+  .search{position:relative;display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--hair);border-radius:999px;padding:8px 14px;min-width:200px;max-width:560px;flex:1 1 auto;transition:border-color .15s,box-shadow .15s}
   .search:focus-within{border-color:var(--brand);box-shadow:0 0 0 3px var(--brand-bg)}
   .search .sicon{flex:none;color:var(--faint);transition:color .15s}
   .search:focus-within .sicon{color:var(--brand)}
@@ -153,11 +154,12 @@
     <input id="gq" placeholder="Buscar em todas as notícias..." oninput="globalSearch()" onfocus="globalSearch()">
     <div class="results hidden" id="results"></div>
   </div>
-  <div class="grow"></div>
-  <button class="helpbtn" onclick="showHelp()" title="Como usar"><span class="q">?</span>Como usar</button>
-  <button class="iconbtn" id="themeBtn" onclick="toggleTheme()" title="Tema">◐</button>
-  <button class="pill primary" id="collectBtn" onclick="collectNow()">Coletar</button>
-  <button class="iconbtn" onclick="showView('config')">⚙</button>
+  <div class="topacts">
+    <button class="helpbtn" onclick="showHelp()" title="Como usar"><span class="q">?</span>Como usar</button>
+    <button class="iconbtn" id="themeBtn" onclick="toggleTheme()" title="Tema">◐</button>
+    <button class="pill primary" id="collectBtn" onclick="collectNow()">Coletar</button>
+    <button class="iconbtn" onclick="showView('config')" title="Configurações">⚙</button>
+  </div>
 </div></div>
 
 <section id="view-feed">
