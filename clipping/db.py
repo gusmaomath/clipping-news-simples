@@ -4,7 +4,7 @@ import sqlite3
 import hashlib
 from contextlib import contextmanager
 from datetime import datetime, timezone
-import config
+from . import config
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS sources (
@@ -38,6 +38,30 @@ CREATE TABLE IF NOT EXISTS article_tabs (        -- vínculo notícia -> aba (bu
     article_id INTEGER NOT NULL,
     tab_id INTEGER NOT NULL,
     PRIMARY KEY (article_id, tab_id)
+);
+CREATE TABLE IF NOT EXISTS article_ai (          -- enriquecimento de IA POR ABA
+    article_id INTEGER NOT NULL,
+    tab_id INTEGER NOT NULL,
+    relevant INTEGER NOT NULL DEFAULT 1,
+    score REAL NOT NULL DEFAULT 0,
+    sentiment TEXT NOT NULL DEFAULT 'Neutro',
+    title_t TEXT, summary_t TEXT, model TEXT,
+    created_at TEXT NOT NULL,
+    PRIMARY KEY (article_id, tab_id)
+);
+CREATE TABLE IF NOT EXISTS tab_spam (            -- lixeira/spam POR ABA (não reexibir/reprocessar)
+    tab_id INTEGER NOT NULL,
+    url_hash TEXT NOT NULL,
+    created_at TEXT NOT NULL,
+    PRIMARY KEY (tab_id, url_hash)
+);
+CREATE TABLE IF NOT EXISTS ai_config (           -- provedor de IA (agnóstico)
+    id INTEGER PRIMARY KEY CHECK (id = 1),
+    provider TEXT NOT NULL DEFAULT 'anthropic',
+    model TEXT NOT NULL DEFAULT 'claude-opus-4-8',
+    api_key TEXT NOT NULL DEFAULT '',
+    base_url TEXT NOT NULL DEFAULT '',
+    updated_at TEXT
 );
 CREATE TABLE IF NOT EXISTS articles (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -89,6 +113,15 @@ def init_db():
         if "include_kw" in tc and "preferences" in tc:
             c.execute("UPDATE tabs SET preferences=include_kw WHERE preferences=''")
             c.execute("UPDATE tabs SET blacklist=exclude_kw WHERE blacklist=''")
+        # migração: colunas novas de IA/estado
+        ac = _cols(c, "articles")
+        for col, ddl in (("status", "TEXT DEFAULT 'raw'"), ("full_text", "TEXT"),
+                         ("lang_orig", "TEXT"), ("event_key", "TEXT")):
+            if col not in ac: c.execute(f"ALTER TABLE articles ADD COLUMN {col} {ddl}")
+        tc2 = _cols(c, "tabs")
+        for col, ddl in (("persona", "TEXT NOT NULL DEFAULT ''"), ("lang", "TEXT NOT NULL DEFAULT 'pt-BR'")):
+            if col not in tc2: c.execute(f"ALTER TABLE tabs ADD COLUMN {col} {ddl}")
+        c.execute("INSERT OR IGNORE INTO ai_config (id) VALUES (1)")
         # semeia sites RSS padrão só uma vez (banco novo, sem fontes ainda)
         if not c.execute("SELECT 1 FROM meta WHERE key='seeded_defaults'").fetchone():
             if c.execute("SELECT COUNT(*) FROM sources").fetchone()[0] == 0:
@@ -103,6 +136,16 @@ def now_iso(): return datetime.now(timezone.utc).isoformat()
 def list_sources(active_only=False):
     q = "SELECT * FROM sources" + (" WHERE active=1" if active_only else "") + " ORDER BY name COLLATE NOCASE"
     with get_conn() as c: return [dict(r) for r in c.execute(q).fetchall()]
+def _norm_source_value(v):
+    v = (v or "").strip().lower()
+    return v.rstrip("/") if v.startswith("http") else v
+def source_exists(value):
+    target = _norm_source_value(value)
+    with get_conn() as c:
+        for r in c.execute("SELECT value FROM sources").fetchall():
+            if _norm_source_value(r["value"]) == target:
+                return True
+    return False
 def add_source(name, type_, value):
     with get_conn() as c:
         return c.execute("INSERT INTO sources (name,type,value,active,created_at) VALUES (?,?,?,1,?)",
@@ -125,10 +168,11 @@ def add_tab(name, preferences="", blacklist=""):
         nxt = c.execute("SELECT COALESCE(MAX(position),0)+1 FROM tabs").fetchone()[0]
         return c.execute("INSERT INTO tabs (name,preferences,blacklist,position,created_at) VALUES (?,?,?,?,?)",
                          (name.strip(), preferences.strip(), blacklist.strip(), nxt, now_iso())).lastrowid
-def update_tab(tid, name, preferences, blacklist):
+def update_tab(tid, name, preferences, blacklist, persona="", lang="pt-BR"):
     with get_conn() as c:
-        c.execute("UPDATE tabs SET name=?, preferences=?, blacklist=? WHERE id=?",
-                  (name.strip(), preferences.strip(), blacklist.strip(), tid))
+        c.execute("UPDATE tabs SET name=?, preferences=?, blacklist=?, persona=?, lang=? WHERE id=?",
+                  (name.strip(), preferences.strip(), blacklist.strip(),
+                   (persona or "").strip(), (lang or "pt-BR").strip(), tid))
 def move_tab(tid, d):
     with get_conn() as c:
         ids = [r["id"] for r in c.execute("SELECT id FROM tabs ORDER BY position, id").fetchall()]
@@ -231,4 +275,76 @@ def delete_articles(ids):
     with get_conn() as c:
         c.executemany("DELETE FROM articles WHERE id=?", [(i,) for i in ids])
         c.executemany("DELETE FROM article_tabs WHERE article_id=?", [(i,) for i in ids])
+        c.executemany("DELETE FROM article_ai WHERE article_id=?", [(i,) for i in ids])
     return len(ids)
+
+# ---- pipeline: estado e texto integral ----
+def list_pending(limit=200):
+    with get_conn() as c:
+        return [dict(r) for r in c.execute(
+            "SELECT * FROM articles WHERE COALESCE(status,'raw')='raw' "
+            "ORDER BY COALESCE(published_at, fetched_at) DESC LIMIT ?", (limit,)).fetchall()]
+def count_pending():
+    with get_conn() as c:
+        return c.execute("SELECT COUNT(*) FROM articles WHERE COALESCE(status,'raw')='raw'").fetchone()[0]
+def set_status(aid, status):
+    with get_conn() as c: c.execute("UPDATE articles SET status=? WHERE id=?", (status, aid))
+def requeue_all():
+    """Volta todas as notícias para a fila ('raw') p/ re-extrair texto e re-resumir."""
+    with get_conn() as c:
+        return c.execute("UPDATE articles SET status='raw'").rowcount
+def set_full_text(aid, text, lang=None):
+    with get_conn() as c:
+        c.execute("UPDATE articles SET full_text=?, lang_orig=COALESCE(?, lang_orig) WHERE id=?",
+                  (text, lang, aid))
+def set_event_key(aid, key):
+    with get_conn() as c: c.execute("UPDATE articles SET event_key=? WHERE id=?", (key, aid))
+def event_index(limit=2000):
+    """Notícias recentes que já têm event_key (para casar o 'mesmo evento')."""
+    with get_conn() as c:
+        return [dict(r) for r in c.execute(
+            "SELECT id, title, snippet, event_key FROM articles "
+            "WHERE event_key IS NOT NULL ORDER BY COALESCE(published_at, fetched_at) DESC LIMIT ?",
+            (limit,)).fetchall()]
+
+# ---- enriquecimento de IA por aba ----
+def upsert_ai(article_id, tab_id, relevant, score, sentiment, title_t, summary_t, model):
+    with get_conn() as c:
+        c.execute("INSERT OR REPLACE INTO article_ai "
+                  "(article_id,tab_id,relevant,score,sentiment,title_t,summary_t,model,created_at) "
+                  "VALUES (?,?,?,?,?,?,?,?,?)",
+                  (article_id, tab_id, 1 if relevant else 0, float(score), sentiment,
+                   title_t, summary_t, model, now_iso()))
+def ai_map():
+    """{(article_id, tab_id): {...}} para montar o feed sem N queries."""
+    out = {}
+    with get_conn() as c:
+        for r in c.execute("SELECT * FROM article_ai").fetchall():
+            out[(r["article_id"], r["tab_id"])] = dict(r)
+    return out
+
+# ---- spam/lixeira por aba ----
+def add_spam(tab_id, url_hashes):
+    rows = [(tab_id, h, now_iso()) for h in url_hashes if h]
+    if not rows: return 0
+    with get_conn() as c:
+        c.executemany("INSERT OR IGNORE INTO tab_spam (tab_id,url_hash,created_at) VALUES (?,?,?)", rows)
+    return len(rows)
+def spam_map():
+    out = {}
+    with get_conn() as c:
+        for r in c.execute("SELECT tab_id, url_hash FROM tab_spam").fetchall():
+            out.setdefault(r["tab_id"], set()).add(r["url_hash"])
+    return out
+
+# ---- config de IA ----
+def get_ai_config():
+    with get_conn() as c:
+        r = c.execute("SELECT * FROM ai_config WHERE id=1").fetchone()
+        return dict(r) if r else {"provider": "anthropic", "model": "claude-opus-4-8",
+                                  "api_key": "", "base_url": ""}
+def set_ai_config(provider, model, api_key, base_url=""):
+    with get_conn() as c:
+        c.execute("INSERT OR REPLACE INTO ai_config (id,provider,model,api_key,base_url,updated_at) "
+                  "VALUES (1,?,?,?,?,?)",
+                  (provider.strip(), model.strip(), api_key.strip(), (base_url or "").strip(), now_iso()))

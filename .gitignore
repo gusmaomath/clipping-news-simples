@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+news.db
+news.db-wal
+news.db-shm
+_smoke*.db*
+.venv/
+venv/
+.env
+.claude

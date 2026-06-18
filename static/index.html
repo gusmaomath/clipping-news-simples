@@ -47,7 +47,8 @@
   .helpbtn:hover{border-color:var(--brand);color:var(--brand-d);background:var(--brand-bg)}
   .helpbtn .q{display:inline-flex;align-items:center;justify-content:center;width:21px;height:21px;border-radius:50%;background:var(--brand);color:var(--on-brand);font-size:12.5px;font-weight:700;line-height:1}
 
-  .feedlayout{display:flex;align-items:flex-start;max-width:1140px;margin:0 auto}
+  .feedlayout{display:flex;align-items:flex-start;max-width:1280px;margin:0 auto}
+  .feedmain .wrap{max-width:none;padding:0 22px}
   .sidebar{position:sticky;top:58px;flex:none;width:212px;align-self:flex-start;max-height:calc(100vh - 58px);overflow-y:auto;padding:18px 12px;border-right:1px solid var(--hair);scrollbar-width:thin}
   .sidehd{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--faint);padding:0 13px 9px;font-weight:600}
   .feedmain{flex:1;min-width:0}
@@ -68,11 +69,28 @@
   .seg button{border:none;background:none;padding:6px 12px;font-size:13px;cursor:pointer;color:var(--muted)}
   .seg button.on{background:var(--brand-bg);color:var(--brand-d);font-weight:600}
   .tin{border:1px solid var(--hair);border-radius:6px;padding:6px 8px;font-size:13px;background:var(--surface);color:var(--ink)}
-  .tagrow{display:flex;flex-wrap:wrap;gap:6px;padding:6px 0 2px}
-  .tagchip{cursor:pointer;border:1px solid var(--hair);background:var(--surface);color:var(--muted);border-radius:999px;padding:4px 11px;font-size:12.5px}
-  .tagchip.on{background:var(--brand);color:var(--on-brand);border-color:var(--brand)}
+  .tagdd{position:relative}
+  .tagmenu{position:absolute;top:42px;left:0;z-index:25;background:var(--surface);border:1px solid var(--hair);border-radius:10px;box-shadow:0 12px 30px rgba(0,0,0,.18);padding:8px;min-width:210px;max-height:320px;overflow:auto}
+  .tagopt{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:6px;font-size:13.5px;color:var(--ink);cursor:pointer;white-space:nowrap}
+  .tagopt:hover{background:var(--chip)} .tagopt input{accent-color:var(--brand);cursor:pointer}
+  .aichip{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;font-weight:600;color:var(--brand-d);background:var(--brand-bg);border:1px solid var(--brand);border-radius:999px;padding:5px 12px;cursor:pointer}
+  .aichip.busy{cursor:default}
+  .dotpulse{width:8px;height:8px;border-radius:50%;background:var(--brand);animation:pulse 1s ease-in-out infinite}
+  @keyframes pulse{0%,100%{opacity:.3;transform:scale(.8)}50%{opacity:1;transform:scale(1.15)}}
 
-  .list{padding:6px 0 70px}
+  .list{padding:10px 0 70px}
+  .list.portal{display:grid;grid-template-columns:repeat(auto-fill,minmax(420px,1fr));gap:16px}
+  .list.portal .selbar{grid-column:1/-1}
+  .list.portal .item{flex-direction:column;padding:16px;overflow:hidden;margin:0;height:100%}
+  .list.portal .item.feature{grid-column:span 2;grid-row:span 2}
+  .list.portal .ibody{display:flex;flex-direction:column;flex:1;min-height:0}
+  .list.portal .meta{margin-top:auto;padding-top:8px}
+  .list.portal .ttl{font-size:16.5px;display:-webkit-box;-webkit-line-clamp:2;line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .list.portal .snippet{display:-webkit-box;-webkit-line-clamp:3;line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+  .list.portal .item.feature .ttl{font-size:20px}
+  .list.portal .item.feature .pimg{height:200px}
+  .list.portal .item.feature .snippet{font-size:15px;-webkit-line-clamp:6;line-clamp:6}
+  .pimg{display:block;width:calc(100% + 32px);height:140px;object-fit:cover;margin:-16px -16px 14px;background:var(--chip)}
   .selbar{display:flex;align-items:center;gap:10px;padding:8px 8px;border-bottom:1px solid var(--hair);font-size:13px;color:var(--muted)}
   .selbar .selall{display:inline-flex;align-items:center;gap:7px;cursor:pointer}
   .selbar input[type=checkbox],.selbox{accent-color:var(--brand);cursor:pointer}
@@ -80,16 +98,24 @@
   .trash{cursor:pointer;border:1px solid var(--hair);background:var(--surface);color:var(--muted);border-radius:8px;padding:6px 12px;font-size:13px;display:inline-flex;align-items:center;gap:6px;font-family:inherit}
   .trash:hover:not(:disabled){border-color:var(--neg);color:var(--neg);background:var(--brand-bg)}
   .trash:disabled{opacity:.45;cursor:default}
-  .item{display:flex;gap:11px;align-items:flex-start;padding:14px 8px;border-bottom:1px solid var(--hair2);border-radius:8px}
-  .item:hover{background:var(--surface)}
-  .item.sel{background:var(--brand-bg)}
+  .item{display:flex;gap:12px;align-items:flex-start;padding:16px 18px;margin-bottom:12px;background:var(--surface);border:1px solid var(--hair);border-radius:12px;transition:box-shadow .15s,border-color .15s}
+  .item:hover{border-color:var(--faint);box-shadow:0 6px 20px rgba(0,0,0,.08)}
+  .item.sel{border-color:var(--brand);background:var(--brand-bg)}
   .selbox{margin-top:3px;width:17px;height:17px;flex:none}
   .ibody{flex:1;min-width:0;cursor:pointer}
   .ttl{font-size:17px;font-weight:600;line-height:1.3;letter-spacing:-.2px}
   .item:hover .ttl{color:var(--brand-d)}
-  .badges{display:flex;flex-wrap:wrap;gap:5px;margin:6px 0}
+  .badges{display:flex;flex-wrap:wrap;gap:5px;margin:6px 0;align-items:center}
   .badge{background:var(--brand-bg);color:var(--brand-d);font-size:10.5px;font-weight:600;padding:2px 8px;border-radius:999px;text-transform:uppercase;letter-spacing:.03em}
-  .snippet{color:var(--muted);font-size:14px;margin:4px 0 8px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .senti{font-size:10.5px;font-weight:700;padding:2px 9px;border-radius:999px;text-transform:uppercase;letter-spacing:.03em}
+  .senti.Positivo{background:#E6F4EA;color:#1E7A3D}.senti.Oportunidade{background:#E7F0FF;color:#1F5FB0}
+  .senti.Negativo{background:#FBEAE8;color:#B42318}.senti.Risco{background:#FCEFD9;color:#9A6700}
+  .senti.Neutro{background:var(--chip);color:var(--muted)}
+  [data-theme="dark"] .senti.Positivo{background:#1d3a28;color:#5FBE82}[data-theme="dark"] .senti.Oportunidade{background:#1c2f4a;color:#7fb0f0}
+  [data-theme="dark"] .senti.Negativo{background:#3a201d;color:#E97A6E}[data-theme="dark"] .senti.Risco{background:#3a2f18;color:#e0b257}
+  .score{font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:6px;background:var(--chip);color:var(--muted)}
+  .score.hi{background:var(--brand);color:var(--on-brand)}
+  .snippet{color:var(--ink);opacity:.82;font-size:15px;line-height:1.6;margin:5px 0 9px}
   .meta{display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-size:12.5px;color:var(--faint)}
   .meta .src{color:var(--muted);font-weight:600}.meta .sep{opacity:.5}
   .meta .ler{color:var(--brand-d);font-weight:600}
@@ -97,10 +123,15 @@
   .others.open{display:block}.others .o{padding:5px 0;font-size:13px}.others .o .s{color:var(--brand-d);font-weight:600;margin-right:6px}
   .more{cursor:pointer;color:var(--brand-d);font-weight:600;font-size:12.5px;background:none;border:none;padding:0;margin-top:6px}
   .empty{text-align:center;color:var(--muted);padding:60px 16px}
+  .pager{display:flex;align-items:center;justify-content:center;gap:14px;padding:20px 0 44px}
+  .pager .pginfo{font-size:13px;color:var(--faint)}
+  .list.portal .pager{grid-column:1/-1}
   .status{text-align:center;color:var(--faint);font-size:12.5px;padding:14px 0}
 
   .overlay{position:fixed;inset:0;z-index:50;background:rgba(10,8,8,.6);display:flex;align-items:flex-start;justify-content:center;padding:5vh 16px;overflow-y:auto}
   .modal{background:var(--surface);max-width:700px;width:100%;border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,.35);overflow:hidden;animation:pop .15s ease}
+  .modal.wide{max-width:960px;min-height:84vh}
+  .modal.wide .exsum{max-height:none}
   @keyframes pop{from{transform:translateY(8px);opacity:.6}to{transform:none;opacity:1}}
   .mhead{display:flex;justify-content:flex-end;padding:14px 16px 0}
   .mclose{cursor:pointer;border:none;background:var(--chip);color:var(--muted);width:30px;height:30px;border-radius:50%;font-size:16px}
@@ -184,6 +215,9 @@
 <script>
 let TABS=[], activeTab="", DATA={clusters:[]}, ART={}, cfgSel=null;
 let timeMode="all", dateVal="", fromVal="", toVal="", selTags=new Set(), selClusters=new Set(), editMode=false;
+let viewMode=(()=>{try{return localStorage.getItem("cn-view")||"list";}catch(e){return "list";}})();
+let page=1, tagMenuOpen=false, aiBusy=false;
+function pageSize(){return viewMode==="portal"?20:15;}
 const jget=async u=>(await fetch(u)).json();
 const jsend=async(u,m,b)=>(await fetch(u,{method:m,headers:{"Content-Type":"application/json"},body:b?JSON.stringify(b):null})).json();
 const esc=s=>{const d=document.createElement("div");d.textContent=s==null?"":s;return d.innerHTML;};
@@ -215,6 +249,8 @@ function feedQuery(){
   else if(timeMode==="date"&&dateVal)p.set("date",dateVal);
   else if(timeMode==="range"){if(fromVal)p.set("dt_from",fromVal);if(toVal)p.set("dt_to",toVal);}
   if(selTags.size)p.set("tags",[...selTags].join(","));
+  if(viewMode==="portal")p.set("sort","score");
+  p.set("page",page); p.set("per_page",pageSize());
   return p.toString();
 }
 async function loadFeed(){
@@ -239,7 +275,8 @@ function renderTabs(){
   h+=`<button class="tab add" onclick="showView('config')">+ setor</button>`;
   document.getElementById("tabs").innerHTML=h;
 }
-function setTab(id){activeTab=id;selTags=new Set();renderTabs();loadFeed();}
+function setTab(id){activeTab=id;selTags=new Set();page=1;renderTabs();loadFeed();}
+function gotoPage(p){page=p;loadFeed();window.scrollTo({top:0,behavior:"smooth"});}
 
 function renderToolbar(){
   const tags=DATA.available_tags||[];
@@ -248,25 +285,57 @@ function renderToolbar(){
   if(timeMode==="date") extra=`<input type="date" class="tin" value="${dateVal}" onchange="dateVal=this.value;loadFeed()">`;
   if(timeMode==="range") extra=`<input type="datetime-local" class="tin" value="${fromVal}" onchange="fromVal=this.value;loadFeed()">
     <span style="color:var(--faint)">até</span><input type="datetime-local" class="tin" value="${toVal}" onchange="toVal=this.value;loadFeed()">`;
-  let tagHtml="";
+  let tagDD="";
   if(tags.length){
-    tagHtml=`<div class="tagrow">`+tags.map(t=>`<span class="tagchip ${selTags.has(t)?"on":""}" onclick="toggleTag('${esc(t)}')">${esc(t)}</span>`).join("")+`</div>`;
+    tagDD=`<div class="tagdd">
+      <button class="pill ${selTags.size?"primary":""}" onclick="toggleTagDD(event)">🏷 Tags${selTags.size?` (${selTags.size})`:""} ▾</button>
+      <div class="tagmenu ${tagMenuOpen?"":"hidden"}" id="tagMenu" onclick="event.stopPropagation()">
+        ${tags.map(t=>`<label class="tagopt"><input type="checkbox" ${selTags.has(t)?"checked":""} onchange="toggleTag('${esc(t)}')"> ${esc(t)}</label>`).join("")}
+        ${selTags.size?`<button class="mini" style="margin-top:6px;width:100%" onclick="clearTags()">limpar seleção</button>`:""}
+      </div></div>`;
   }
+  let aiChip="";
+  if(aiBusy) aiChip=`<span class="aichip busy"><span class="dotpulse"></span> IA processando…</span>`;
+  else if(DATA.pending>0) aiChip=`<span class="aichip" onclick="analyzeNow()" title="Clique para analisar agora">✨ ${DATA.pending} na fila</span>`;
   document.getElementById("toolbar").innerHTML=`
     <div class="toolbar">
       <div class="seg">${segBtn("all","Tudo")}${segBtn("1h","1h")}${segBtn("2h","2h")}${segBtn("date","Dia")}${segBtn("range","Período")}</div>
       ${extra}
+      ${tagDD}
+      <div class="seg">
+        <button class="${viewMode==="list"?"on":""}" onclick="setView('list')">☰ Lista</button>
+        <button class="${viewMode==="portal"?"on":""}" onclick="setView('portal')">▦ Portal</button>
+      </div>
+      ${aiChip}
       <div class="grow"></div>
+      <button class="pill" id="aiBtn" onclick="analyzeNow()" title="Analisar com IA">✨ Analisar</button>
       <button class="pill ${editMode?"primary":""}" onclick="toggleEdit()">${editMode?"✓ Concluir":"✎ Editar"}</button>
-      <button class="pill" onclick="execSummary()">📋 Resumo Executivo</button>
-    </div>${tagHtml}`;
+      <button class="pill" onclick="execSummary()">📋 Resumo</button>
+    </div>`;
 }
-function setTime(m){timeMode=m;if(m!=="date")dateVal="";if(m!=="range"){fromVal="";toVal="";}loadFeed();}
-function toggleTag(t){selTags.has(t)?selTags.delete(t):selTags.add(t);loadFeed();}
+function toggleTagDD(e){e.stopPropagation();tagMenuOpen=!tagMenuOpen;
+  const m=document.getElementById("tagMenu"); if(m) m.classList.toggle("hidden",!tagMenuOpen);}
+function clearTags(){selTags=new Set();page=1;loadFeed();}
+function setTime(m){timeMode=m;page=1;if(m!=="date")dateVal="";if(m!=="range"){fromVal="";toVal="";}loadFeed();}
+function toggleTag(t){selTags.has(t)?selTags.delete(t):selTags.add(t);page=1;loadFeed();}
+function setView(v){viewMode=v;page=1;try{localStorage.setItem("cn-view",v);}catch(e){}renderToolbar();loadFeed();}
+async function analyzeNow(){
+  const b=document.getElementById("aiBtn");if(b){b.disabled=true;b.textContent="Analisando...";}
+  aiBusy=true;renderToolbar();
+  try{const r=await jsend("/api/process","POST");aiBusy=false;await loadFeed();
+    document.getElementById("status").textContent=`IA: ${r.processed} notícia(s) analisada(s) · motor ${r.engine||"?"}${r.remaining?` · ${r.remaining} ainda na fila`:""}`;}
+  catch(e){aiBusy=false;document.getElementById("status").textContent="Erro ao analisar.";}
+  finally{aiBusy=false;const bb=document.getElementById("aiBtn");if(bb){bb.disabled=false;bb.textContent="✨ Analisar";}}
+}
 
 function card(c,i){
   const a=c.lead;
-  const badges=(a.tags||[]).map(t=>`<span class="badge">${esc(t)}</span>`).join("");
+  const senti=a.sentiment?`<span class="senti ${esc(a.sentiment)}">${esc(a.sentiment)}</span>`:"";
+  const score=(a.score>0)?`<span class="score ${a.score>=70?"hi":""}" title="Score de relevância (IA)">${Math.round(a.score)}</span>`:"";
+  const badges=senti+score+(a.tags||[]).map(t=>`<span class="badge">${esc(t)}</span>`).join("");
+  const ttl=a.title_disp||a.title;
+  const snip=a.snippet_disp||a.snippet;
+  const img=(viewMode==="portal"&&a.image_url)?`<img class="pimg" src="${esc(a.image_url)}" loading="lazy" onerror="this.remove()">`:"";
   let others="";
   if(c.size>1){
     const list=(c.others||[]).map(o=>`<div class="o"><span class="s">${esc(o.source_name||"")}</span>
@@ -275,12 +344,14 @@ function card(c,i){
       <div class="others" id="oth-${i}">${list}</div>`;
   }
   const on=selClusters.has(i);
-  return `<div class="item ${on?"sel":""}" id="item-${i}">
+  const feat=(viewMode==="portal" && i===0 && (DATA.clusters||[]).length>=4) ? "feature" : "";
+  return `<div class="item ${on?"sel":""} ${feat}" id="item-${i}">
     ${editMode?`<input type="checkbox" class="selbox" ${on?"checked":""} title="Selecionar" onclick="event.stopPropagation();toggleSel(${i},this.checked)">`:""}
     <div class="ibody" onclick="openArticle(${a.id})">
-    <div class="ttl">${esc(a.title)}</div>
+    ${img}
+    <div class="ttl">${esc(ttl)}</div>
     ${badges?`<div class="badges">${badges}</div>`:""}
-    ${a.snippet?`<div class="snippet">${esc(a.snippet)}</div>`:""}
+    ${snip?`<div class="snippet">${esc(snip)}</div>`:""}
     <div class="meta"><span class="src">${esc(a.source_name||"")}</span><span class="sep">·</span>
       <span>${timeAgo(a.published_at)}</span>
       ${c.size>1?`<span class="sep">·</span><span>${c.sources.length} fontes</span>`:""}
@@ -296,13 +367,26 @@ function selBar(total){
     <button class="trash" id="trashBtn" onclick="deleteSelected()" disabled title="Apagar selecionadas">🗑 Apagar</button>
   </div>`;
 }
+function pager(){
+  const pages=DATA.pages||1, cur=DATA.page||1;
+  if(pages<=1) return "";
+  return `<div class="pager">
+    <button class="pill" ${cur<=1?"disabled":""} onclick="gotoPage(${cur-1})">← Anterior</button>
+    <span class="pginfo">Página ${cur} de ${pages}</span>
+    <button class="pill" ${cur>=pages?"disabled":""} onclick="gotoPage(${cur+1})">Próxima →</button>
+  </div>`;
+}
 function renderFeed(){
+  page=DATA.page||1;                         // alinha com o clamp do servidor
   const cl=DATA.clusters||[];
-  document.getElementById("feed").innerHTML = cl.length? (editMode?selBar(cl.length):"")+cl.map((c,i)=>card(c,i)).join("")
+  const feed=document.getElementById("feed");
+  feed.className="list"+(viewMode==="portal"?" portal":"");
+  feed.innerHTML = cl.length? (editMode?selBar(cl.length):"")+cl.map((c,i)=>card(c,i)).join("")+pager()
     : `<div class="empty">Nenhuma notícia com os filtros atuais.<br>Clique em <b>Coletar</b> ou ajuste os filtros.</div>`;
   if(editMode) updateSelBar();
   const nm=activeTab===""?"Todas":(TABS.find(t=>t.id==activeTab)||{}).name;
-  document.getElementById("status").textContent=`${cl.length} assunto(s) · ${nm}`;
+  const tot=DATA.total!=null?DATA.total:cl.length;
+  document.getElementById("status").textContent=`${tot} assunto(s) · ${nm}${DATA.pages>1?` · pág. ${DATA.page}/${DATA.pages}`:""}`;
 }
 function toggleOthers(i){document.getElementById("oth-"+i).classList.toggle("open");}
 
@@ -329,10 +413,17 @@ async function deleteSelected(){
   const ids=[];
   idxs.forEach(i=>{const c=(DATA.clusters||[])[i]; if(!c)return; ids.push(c.lead.id); (c.others||[]).forEach(o=>ids.push(o.id));});
   if(!ids.length) return;
-  if(!confirm(`Apagar ${idxs.length} notícia(s) selecionada(s)?\nIsso remove ${ids.length} item(ns) do banco e não pode ser desfeito.`)) return;
-  const r=await jsend("/api/articles/delete","POST",{ids});
-  await loadFeed();
-  document.getElementById("status").textContent=`${(r&&r.removed)||0} item(ns) apagado(s).`;
+  if(activeTab===""){
+    if(!confirm(`Apagar ${idxs.length} notícia(s) do banco?\nIsso remove ${ids.length} item(ns) definitivamente.`)) return;
+    const r=await jsend("/api/articles/delete","POST",{ids});
+    await loadFeed();
+    document.getElementById("status").textContent=`${(r&&r.removed)||0} item(ns) apagado(s).`;
+  }else{
+    if(!confirm(`Enviar ${idxs.length} notícia(s) para a lixeira desta aba?\nElas somem desta aba e não voltam a ser exibidas/reprocessadas aqui.`)) return;
+    const r=await jsend(`/api/tabs/${activeTab}/spam`,"POST",{ids});
+    await loadFeed();
+    document.getElementById("status").textContent=`${(r&&r.added)||0} enviada(s) para a lixeira da aba.`;
+  }
 }
 
 // ---- POPUP ----
@@ -357,7 +448,7 @@ async function openArticle(id){
     <div class="mfoot"><span style="color:var(--faint);font-size:12.5px">Texto extraído da fonte.</span>
       <a class="pill primary" href="${esc(full.url)}" target="_blank" rel="noopener">Abrir no site ↗</a></div>`;
 }
-function showOverlay(html){document.getElementById("modal").innerHTML=html;
+function showOverlay(html){const m=document.getElementById("modal");m.classList.remove("wide");m.innerHTML=html;
   document.getElementById("overlay").classList.remove("hidden");document.body.style.overflow="hidden";}
 function closeModal(){document.getElementById("overlay").classList.add("hidden");document.body.style.overflow="";}
 document.addEventListener("keydown",e=>{if(e.key==="Escape"){closeModal();hideResults();}});
@@ -366,6 +457,7 @@ document.addEventListener("keydown",e=>{if(e.key==="Escape"){closeModal();hideRe
 async function execSummary(){
   showOverlay(`<div class="mhead"><button class="mclose" onclick="closeModal()">✕</button></div>
     <div class="mtitle">Resumo Executivo</div><div class="loading"><div class="spin"></div>Consolidando…</div>`);
+  document.getElementById("modal").classList.add("wide");
   let r; try{ r=await jget("/api/resumo-executivo?"+feedQuery()); }catch(e){ r=null; }
   if(!r){document.getElementById("modal").innerHTML+=`<div class="exsum">Erro ao gerar.</div>`;return;}
   const p=r.payload;
@@ -375,56 +467,65 @@ async function execSummary(){
     <div class="mhead"><button class="mclose" onclick="closeModal()">✕</button></div>
     <div class="mtitle">Resumo Executivo · ${esc(p.aba)}</div>
     <div class="exsum">
-      <div class="note">Payload pronto para IA — ${p.qtd_assuntos} assunto(s), já com filtros de tempo, tags e agrupamento aplicados.
-      O resumo detalhado será gerado quando o modelo de IA for plugado (rota /api/resumo-executivo).</div>
-      <h4>Notícias consolidadas</h4>${items||"<p>Nada para resumir.</p>"}
+      <div class="note">${p.qtd_assuntos} assunto(s) consolidado(s), já com filtros de tempo, tags e agrupamento aplicados.</div>
+      ${items||"<p>Nada para resumir.</p>"}
       <div style="margin-top:14px"><button class="pill" onclick='copyJson(${JSON.stringify(JSON.stringify(p))})'>Copiar JSON (payload)</button></div>
     </div>`;
 }
 function copyJson(s){navigator.clipboard&&navigator.clipboard.writeText(s);}
 
 // ---- Como usar (ajuda + prompt para IA) ----
-const AI_PROMPT=`Você é um especialista em monitoramento de imprensa (clipping). Vou te dar um tema e você vai montar a configuração completa de um painel de notícias.
+const AI_PROMPT=`Você é um especialista em monitoramento de imprensa (clipping) e vai montar a configuração completa de uma SEÇÃO (aba) de um painel de notícias com IA.
 
-==== TEMA QUE QUERO ACOMPANHAR ====
-<descreva aqui em 1-3 linhas: setor, empresa, produto, concorrentes, região ou assunto. Quanto mais contexto, melhor.>
+==== O QUE EU QUERO ACOMPANHAR (preencha com o MÁXIMO de detalhe) ====
+<Descreva aqui:
+ • o tema (setor, empresa, produto, concorrentes, região);
+ • o que é relevante e o que é ruído para mim;
+ • o meu objetivo (achar oportunidades, monitorar riscos, acompanhar concorrência...);
+ • o meu papel/persona (ex.: analista de investimentos, jornalista, gestor de produto).>
 
-==== COMO O PAINEL FUNCIONA (para você calibrar a resposta) ====
-- PREFERENCIAS: uma notícia só aparece na aba se contiver ALGUMA dessas palavras (filtro de inclusão). Use termos amplos e centrais do tema.
-- BLACKLIST: se a notícia contiver ALGUMA dessas palavras, ela é descartada (filtro de ruído).
-- TAGS: subtemas. Cada tag tem palavras-chave; quando batem, viram etiqueta no card e filtro no feed.
-- BUSCAS_GOOGLE_NEWS: termos que serão pesquisados no Google News e trazidos direto para esta aba (vão além do que os sites RSS publicam). Use frases específicas, com nomes próprios.
-- SITES_RSS: sites/portais com feed RSS que cobrem bem o tema (valem para o painel todo).
-- O sistema ignora acentos e maiúsculas ao comparar. Notícias só da semana atual.
+Se faltar contexto para gerar uma boa configuração, FAÇA PERGUNTAS antes de responder.
+Depois capriche: seja específico, use nomes próprios (empresas, pessoas, produtos, eventos).
 
-==== RESPONDA EXATAMENTE NESTE FORMATO (sem comentários, sem markdown) ====
-NOME: <nome curto da aba, ex.: Mercado Financeiro>
+==== CAMPOS — o que é OBRIGATÓRIO x OPCIONAL ====
+[OBRIGATÓRIO] NOME    — nome curto da aba.
+[OBRIGATÓRIO] PERSONA — 2 a 4 frases dizendo quem sou eu e qual o critério de análise. A IA usa isto para julgar relevância, dar o score e classificar o sentimento. Quanto mais detalhada, melhor.
+[OBRIGATÓRIO] IDIOMA  — idioma de saída dos títulos/resumos (ex.: pt-BR, en, es).
+[opcional]   PREFERENCIAS — palavras que INCLUEM a notícia (filtro grosso). Vazio = aceita tudo.
+[opcional]   BLACKLIST    — palavras que DESCARTAM a notícia (ruído).
+[opcional]   TAGS         — subtemas, cada um com palavras-chave.
+[opcional]   BUSCAS_GOOGLE_NEWS — termos pesquisados no Google News só desta aba.
+[opcional]   SITES_RSS    — portais com feed RSS que cobrem o tema.
 
-PREFERENCIAS: palavra1, palavra2, palavra3, ...
+==== RESPONDA EXATAMENTE NESTE FORMATO (sem markdown, sem comentários) ====
+NOME: <nome curto>
 
-BLACKLIST: palavra1, palavra2, ...
+PERSONA: <2 a 4 frases descrevendo quem sou e o critério de análise>
+
+IDIOMA: pt-BR
+
+PREFERENCIAS: palavra1, palavra2, ...   (ou: nenhum)
+
+BLACKLIST: palavra1, palavra2, ...   (ou: nenhum)
 
 TAGS:
 <Nome da Tag 1>: palavra1, palavra2, palavra3
 <Nome da Tag 2>: palavra1, palavra2, palavra3
-<Nome da Tag 3>: palavra1, palavra2, palavra3
 
 BUSCAS_GOOGLE_NEWS:
-<termo de busca 1, ex.: "Petrobras dividendos">
-<termo de busca 2>
-<termo de busca 3>
+<termo 1, ex.: "Petrobras dividendos">
+<termo 2>
 
 SITES_RSS:
 <Nome do site | URL do feed RSS>
 <Nome do site | URL do feed RSS>
 
 ==== REGRAS ====
-- PREFERENCIAS: 6 a 15 termos.
-- BLACKLIST: inclua ruídos comuns (promoção, cupom, sorteio, horóscopo, novela, apostas) + ruídos específicos do tema.
-- TAGS: de 4 a 8 tags, cada uma com 3 a 8 palavras-chave.
-- BUSCAS_GOOGLE_NEWS: de 4 a 10 buscas específicas (nomes de empresas, pessoas, produtos, eventos). Uma por linha.
-- SITES_RSS: sugira de 4 a 8 portais confiáveis para o tema, com a URL do RSS. Se não tiver certeza da URL exata do feed, indique a página inicial do site e avise que devo confirmar o endereço do RSS.
-- Não escreva nada fora do formato acima.`;
+- PERSONA detalhada e específica melhora MUITO o score e o sentimento — não economize.
+- PREFERENCIAS: 6 a 15 termos. BLACKLIST: ruídos comuns (promoção, cupom, sorteio, horóscopo, apostas) + ruídos do tema.
+- TAGS: 4 a 8, cada uma com 3 a 8 palavras-chave. BUSCAS_GOOGLE_NEWS: 4 a 10, bem específicas.
+- SITES_RSS: 4 a 8 portais confiáveis com a URL do RSS; se não tiver certeza da URL exata, indique o site e avise que devo confirmar o feed.
+- Campos opcionais sem valor: escreva "nenhum". Não escreva nada fora do formato acima.`;
 
 function showHelp(){
   showOverlay(`
@@ -433,16 +534,23 @@ function showHelp(){
     <div class="exsum">
       <p>O Clipping News reúne notícias e organiza por <b>abas (setores)</b>, que ficam na <b>barra lateral</b> à esquerda. Cada aba tem filtros, tags e buscas próprias.</p>
       <h4>Os campos de cada aba</h4>
-      <div class="exitem"><b>Preferências</b><div class="x">Palavras que a notícia precisa conter para aparecer na aba (separe por vírgula). Vazio = aceita tudo.</div></div>
-      <div class="exitem"><b>Blacklist</b><div class="x">Palavras que excluem a notícia (ruído, promoções, etc.).</div></div>
-      <div class="exitem"><b>Tags</b><div class="x">Subtemas com palavras-chave. Viram etiquetas nos cards e filtros no feed.</div></div>
-      <div class="exitem"><b>Buscas no Google News</b><div class="x">Termos pesquisados no Google News <b>só desta aba</b>. As notícias encontradas entram nesta aba mesmo sem casar com as Preferências.</div></div>
+      <div class="exitem"><b>Nome</b> <span class="senti Risco">obrigatório</span><div class="x">Nome curto da seção (aparece na barra lateral).</div></div>
+      <div class="exitem"><b>Persona / critério da IA</b> <span class="senti Risco">obrigatório p/ IA</span><div class="x">Quem é você e o que importa. A IA usa isto para decidir relevância, dar o <b>score</b> e o <b>sentimento</b>. Quanto mais detalhada, melhor.</div></div>
+      <div class="exitem"><b>Idioma de saída</b> <span class="senti Risco">obrigatório</span><div class="x">Idioma em que a IA entrega título e resumo (o original fica no popup).</div></div>
+      <div class="exitem"><b>Preferências</b> <span class="senti Neutro">opcional</span><div class="x">Palavras que INCLUEM a notícia. Vazio = aceita tudo.</div></div>
+      <div class="exitem"><b>Blacklist</b> <span class="senti Neutro">opcional</span><div class="x">Palavras que excluem a notícia (ruído, promoções, etc.).</div></div>
+      <div class="exitem"><b>Tags</b> <span class="senti Neutro">opcional</span><div class="x">Subtemas com palavras-chave. Viram etiquetas nos cards e filtros no feed.</div></div>
+      <div class="exitem"><b>Buscas no Google News</b> <span class="senti Neutro">opcional</span><div class="x">Termos pesquisados no Google News <b>só desta aba</b>; entram mesmo sem casar com as Preferências.</div></div>
+      <h4>Análise por IA, modos e imagem</h4>
+      <p>Em <b>🤖 IA</b> (configurações) escolha o provedor/modelo e cole a chave (sem chave, roda no modo heurístico offline). O botão <b>✨ Analisar</b> processa a fila. O feed alterna entre <b>☰ Lista</b> e <b>▦ Portal</b> — no Portal os cards são ordenados por score e mostram a <b>imagem</b> da notícia quando houver.</p>
+      <h4>Importar / Exportar configuração</h4>
+      <p>No editor da aba, <b>⬇ Exportar</b> baixa um JSON com tudo (preferências, blacklist, persona, idioma, tags e buscas). Em ⚙ Configurações, <b>⬆ Importar</b> recria uma aba a partir desse JSON — ótimo para reaproveitar ou compartilhar setores.</p>
       <h4>Importações em massa</h4>
       <p><b>Tags</b> — uma por linha: <code>Nome da tag: palavra1, palavra2</code></p>
       <p><b>Buscas Google News</b> — uma por linha (só o termo).</p>
       <p><b>Sites (RSS)</b> — em ⚙ Fontes, uma por linha: <code>Nome | https://site/feed</code></p>
       <h4>Gerar tudo com uma IA</h4>
-      <p>Copie o prompt abaixo, cole numa IA (ChatGPT, Claude, Gemini...) e descreva o tema. A IA devolve <b>NOME</b>, <b>PREFERENCIAS</b>, <b>BLACKLIST</b>, <b>TAGS</b>, <b>BUSCAS_GOOGLE_NEWS</b> e <b>SITES_RSS</b>. Cole cada bloco no campo correspondente (TAGS e BUSCAS nos importadores da aba; SITES_RSS em ⚙ Fontes).</p>
+      <p>Copie o prompt abaixo, cole numa IA (ChatGPT, Claude, Gemini...) e descreva o tema com detalhe. Ele indica o que é <b>obrigatório</b> (NOME, PERSONA, IDIOMA) e <b>opcional</b>, e pede que a IA faça perguntas se faltar contexto. A resposta traz <b>NOME, PERSONA, IDIOMA, PREFERENCIAS, BLACKLIST, TAGS, BUSCAS_GOOGLE_NEWS e SITES_RSS</b> — cole cada bloco no campo correspondente (TAGS e BUSCAS nos importadores da aba; SITES_RSS em ⚙ Fontes).</p>
       <textarea id="promptBox" class="promptbox" readonly>${esc(AI_PROMPT)}</textarea>
       <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
         <button class="pill primary" id="copyPromptBtn" onclick="copyPromptBox()">Copiar prompt</button>
@@ -467,12 +575,18 @@ async function doSearch(){
   if(!q){hideResults();return;}
   let r; try{ r=await jget("/api/search?q="+encodeURIComponent(q)); }catch(e){ r={results:[]}; }
   if(!r.results.length){box.innerHTML=`<div class="r"><span class="m">Nada encontrado.</span></div>`;}
-  else box.innerHTML=r.results.map(a=>`<div class="r" onclick="ART[${a.id}]=${JSON.stringify(a).replace(/'/g,'&#39;')};openArticle(${a.id});hideResults()">
-    <b>${esc(a.title)}</b><span class="m">${esc(a.source_name||"")} · ${timeAgo(a.published_at)}</span></div>`).join("");
+  else{
+    r.results.forEach(a=>{ART[a.id]=a;});   // guarda p/ o popup abrir sem quebrar o HTML
+    box.innerHTML=r.results.map(a=>`<div class="r" onclick="openArticle(${a.id});hideResults()">
+      <b>${esc(a.title)}</b><span class="m">${esc(a.source_name||"")} · ${timeAgo(a.published_at)}</span></div>`).join("");
+  }
   box.classList.remove("hidden");
 }
 function hideResults(){document.getElementById("results").classList.add("hidden");}
-document.addEventListener("click",e=>{if(!e.target.closest(".search"))hideResults();});
+document.addEventListener("click",e=>{
+  if(!e.target.closest(".search"))hideResults();
+  if(!e.target.closest(".tagdd")){tagMenuOpen=false;const m=document.getElementById("tagMenu");if(m)m.classList.add("hidden");}
+});
 
 async function collectNow(){
   const b=document.getElementById("collectBtn");b.disabled=true;b.textContent="Coletando...";
@@ -485,12 +599,15 @@ async function collectNow(){
 // ---- CONFIG (por aba) ----
 async function loadConfig(){
   TABS=await jget("/api/tabs");
-  if(cfgSel===null||(cfgSel!=="fontes"&&!TABS.find(t=>t.id==cfgSel))) cfgSel=TABS.length?TABS[0].id:"fontes";
+  if(cfgSel===null||(cfgSel!=="fontes"&&cfgSel!=="ia"&&!TABS.find(t=>t.id==cfgSel))) cfgSel=TABS.length?TABS[0].id:"fontes";
   renderCfgTop(); renderCfgBody();
 }
 function renderCfgTop(){
   let h=TABS.map(t=>`<button class="tp ${cfgSel==t.id?"on":""}" onclick="cfgPick('${t.id}')">${esc(t.name)}</button>`).join("");
-  h+=`<button class="tp add" onclick="newTab()">+ Nova aba</button><div class="grow"></div>
+  h+=`<button class="tp add" onclick="newTab()">+ Nova aba</button>
+    <button class="tp" onclick="importTabDialog()" title="Importar configuração de aba (JSON)">⬆ Importar</button>
+    <div class="grow"></div>
+    <button class="tp ${cfgSel==='ia'?'on':''}" onclick="cfgPick('ia')">🤖 IA</button>
     <button class="tp ${cfgSel==='fontes'?'on':''}" onclick="cfgPick('fontes')">⚙ Fontes</button>`;
   document.getElementById("cfgtop").innerHTML=h;
 }
@@ -499,6 +616,7 @@ async function newTab(){const r=await jsend("/api/tabs","POST",{name:"Nova aba"}
 
 async function renderCfgBody(){
   if(cfgSel==="fontes"){renderSourcesCfg();return;}
+  if(cfgSel==="ia"){renderAiCfg();return;}
   const t=TABS.find(x=>x.id==cfgSel); if(!t){document.getElementById("cfgbody").innerHTML="";return;}
   const i=TABS.findIndex(x=>x.id==cfgSel);
   document.getElementById("cfgbody").innerHTML=`
@@ -510,9 +628,14 @@ async function renderCfgBody(){
         <div class="field" style="flex:1;min-width:180px"><label>Nome</label><input id="t-name" value="${esc(t.name)}"></div>
         <div class="field" style="min-width:100%"><label>Preferências (palavras que incluem a notícia, separadas por vírgula)</label><textarea id="t-pref" rows="3" placeholder="banco, juros, bolsa, ações, inflação">${esc(t.preferences)}</textarea></div>
         <div class="field" style="min-width:100%"><label>Blacklist (palavras que excluem a notícia, separadas por vírgula)</label><textarea id="t-bl" rows="3" placeholder="boato, sorteio, horóscopo, promoção">${esc(t.blacklist)}</textarea></div>
+        <div class="field" style="min-width:100%"><label>Persona / critério da IA (guia a análise, score, sentimento e tradução desta aba)</label><textarea id="t-persona" rows="3" placeholder="Ex.: Sou analista de investimentos buscando oportunidades e riscos em tecnologia e renda fixa. Priorize fatos com impacto financeiro.">${esc(t.persona||"")}</textarea></div>
+        <div class="field" style="min-width:160px"><label>Idioma de saída</label>
+          <select id="t-lang">${["pt-BR","en","es","fr","de","it"].map(l=>`<option value="${l}" ${(t.lang||"pt-BR")===l?"selected":""}>${l}</option>`).join("")}</select></div>
+        <div class="grow"></div>
         <button class="pill primary" onclick="saveTab(${t.id})">Salvar</button>
         <button class="mini" onclick="moveTab(${t.id},-1)" ${i===0?"disabled":""}>↑</button>
         <button class="mini" onclick="moveTab(${t.id},1)" ${i===TABS.length-1?"disabled":""}>↓</button>
+        <button class="mini" onclick="exportTab(${t.id})" title="Baixar configuração desta aba (JSON)">⬇ Exportar</button>
         <button class="mini danger" onclick="delTab(${t.id})">excluir aba</button>
       </div>
     </div>
@@ -550,9 +673,36 @@ async function renderCfgBody(){
   loadTags(t.id); loadSearches(t.id);
 }
 async function saveTab(id){const name=document.getElementById("t-name").value.trim();if(!name)return alert("Nome obrigatório.");
-  await jsend(`/api/tabs/${id}`,"PUT",{name,preferences:document.getElementById("t-pref").value.trim(),blacklist:document.getElementById("t-bl").value.trim()});
+  await jsend(`/api/tabs/${id}`,"PUT",{name,preferences:document.getElementById("t-pref").value.trim(),
+    blacklist:document.getElementById("t-bl").value.trim(),
+    persona:document.getElementById("t-persona").value.trim(),lang:document.getElementById("t-lang").value});
   TABS=await jget("/api/tabs");renderCfgTop();renderCfgBody();}
 async function moveTab(id,d){await jsend(`/api/tabs/${id}/move/${d}`,"POST");TABS=await jget("/api/tabs");renderCfgTop();renderCfgBody();}
+async function exportTab(id){
+  const data=await jget(`/api/tabs/${id}/export`);
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
+  const url=URL.createObjectURL(blob),a=document.createElement("a");
+  a.href=url;a.download="aba-"+(data.name||"config").trim().replace(/\s+/g,"-").toLowerCase()+".json";a.click();
+  URL.revokeObjectURL(url);
+}
+function importTabDialog(){
+  showOverlay(`<div class="mhead"><button class="mclose" onclick="closeModal()">✕</button></div>
+    <div class="mtitle">Importar configuração de aba</div>
+    <div class="exsum">
+      <p>Cole o JSON exportado de outra aba (ou escolha um arquivo). Cria uma nova aba com preferências, blacklist, persona, idioma, tags e buscas.</p>
+      <input type="file" accept="application/json,.json" onchange="impFile(event)" style="margin-bottom:8px">
+      <textarea id="imp-json" class="promptbox" placeholder='{"name":"...","persona":"...","tags":[...],"searches":[...]}'></textarea>
+      <div style="margin-top:10px"><button class="pill primary" onclick="doImportTab()">Importar</button></div>
+    </div>`);
+}
+function impFile(e){const f=e.target.files[0];if(!f)return;const r=new FileReader();
+  r.onload=()=>{document.getElementById("imp-json").value=r.result;};r.readAsText(f);}
+async function doImportTab(){
+  let data; try{ data=JSON.parse(document.getElementById("imp-json").value); }catch(e){ return alert("JSON inválido."); }
+  if(!data||!data.name) return alert("JSON precisa ter ao menos um campo 'name'.");
+  const r=await jsend("/api/tabs/import","POST",data);
+  closeModal(); TABS=await jget("/api/tabs"); cfgSel=r.id; renderCfgTop(); renderCfgBody();
+}
 async function delTab(id){
   if(!confirm("Excluir a aba e suas tags?"))return;
   const purge=confirm("Apagar também as notícias EXCLUSIVAS desta aba (que não aparecem em nenhuma outra aba)?\n\nOK = apagar essas notícias · Cancelar = manter as notícias");
@@ -639,11 +789,13 @@ async function loadSources(){
 async function addSource(){const name=document.getElementById("s-name").value.trim(),value=document.getElementById("s-value").value.trim();
   if(!name||!value)return alert("Preencha nome e URL do RSS.");
   if(!/^https?:\/\//i.test(value))return alert("A URL do RSS precisa começar com http(s).");
-  await jsend("/api/sources","POST",{name,type:"rss",value});document.getElementById("s-name").value="";document.getElementById("s-value").value="";loadSources();}
+  const r=await jsend("/api/sources","POST",{name,type:"rss",value});
+  if(!r||!r.id)return alert(r&&r.detail?r.detail:"Não foi possível adicionar.");
+  document.getElementById("s-name").value="";document.getElementById("s-value").value="";loadSources();}
 function srcNameFrom(v){try{return new URL(v).hostname.replace(/^www\./,"");}catch(e){return v.slice(0,40);}}
 async function bulkAddSources(){
   const box=document.getElementById("s-bulk");
-  let added=0,skipped=0;
+  let added=0,skipped=0,dup=0;
   for(const raw of box.value.split("\n")){
     const line=raw.trim(); if(!line||line.startsWith("#")) continue;
     const parts=line.split("|").map(s=>s.trim());
@@ -653,16 +805,95 @@ async function bulkAddSources(){
     else { value=parts[0]; name=srcNameFrom(value); }
     if(!/^https?:\/\//i.test(value||"")){ skipped++; continue; }  // só RSS (URL); termos vão nas abas
     if(!name) name=srcNameFrom(value);
-    await jsend("/api/sources","POST",{name,type:"rss",value});
-    added++;
+    const r=await jsend("/api/sources","POST",{name,type:"rss",value});
+    if(r&&r.id) added++; else dup++;
   }
   box.value="";
   loadSources();
-  if(!added) alert("Nada importado. Use 'Nome | https://site/feed' (uma URL de RSS por linha).");
-  else if(skipped) alert(`${added} site(s) importado(s). ${skipped} linha(s) ignorada(s) por não ter URL — termos de busca agora vão dentro de cada aba.`);
+  if(!added&&!dup) alert("Nada importado. Use 'Nome | https://site/feed' (uma URL de RSS por linha).");
+  else alert(`${added} site(s) importado(s).`+(dup?` ${dup} já existiam (ignorados).`:"")+(skipped?` ${skipped} sem URL ignorada(s).`:""));
 }
 const toggleSrc=(id,a)=>jsend(`/api/sources/${id}`,"PATCH",{active:!!a}).then(loadSources);
 const delSrc=id=>fetch(`/api/sources/${id}`,{method:"DELETE"}).then(loadSources);
+
+// ---- CONFIG: IA ----
+const AI_PROVIDERS={
+  anthropic:{label:"Anthropic (Claude)", models:["claude-opus-4-8","claude-sonnet-4-6","claude-haiku-4-5"],
+    keyUrl:"https://console.anthropic.com/settings/keys", keyHint:"sk-ant-...",
+    note:"Requer <code>pip install anthropic</code>. Pegue a chave em console.anthropic.com → API Keys."},
+  openai:{label:"OpenAI (GPT)", models:["gpt-4o-mini","gpt-4o","gpt-4.1-mini"],
+    keyUrl:"https://platform.openai.com/api-keys", keyHint:"sk-...",
+    note:"Sem SDK extra (via REST). Pegue a chave em platform.openai.com → API keys (precisa de crédito)."},
+  gemini:{label:"Google (Gemini)", models:["gemini-2.0-flash","gemini-1.5-flash","gemini-1.5-pro"],
+    keyUrl:"https://aistudio.google.com/apikey", keyHint:"AIza...",
+    note:"Sem SDK extra (via REST). Pegue a chave grátis em aistudio.google.com → Get API key."},
+  heuristic:{label:"Heurística (sem IA, offline)", models:[], keyUrl:"", keyHint:"",
+    note:"Não usa IA externa nem chave: gera score/sentimento por regras locais."},
+};
+async function renderAiCfg(){
+  let c; try{ c=await jget("/api/ai-config"); }catch(e){ c={}; }
+  const prov=AI_PROVIDERS[c.provider]?c.provider:"anthropic";
+  document.getElementById("cfgbody").innerHTML=`
+  <div class="card"><div class="section"><h3>Inteligência Artificial</h3>
+    <p class="hint">A IA lê cada notícia e, guiada pela <b>persona</b> da aba, decide relevância, gera um <b>score</b>, uma tag de <b>sentimento</b> e traduz título/resumo. Arquitetura modular — escolha Claude, GPT, Gemini ou nenhum.</p>
+    <p class="note">Motor ativo: <b>${esc(c.active||"?")}</b>${c.pending?` · ${c.pending} notícia(s) na fila`:""}.
+      ${c.has_key?"Chave configurada.":"Sem chave válida = modo heurístico (offline)."}</p>
+    <div class="form">
+      <div class="field" style="min-width:200px"><label>Provedor</label>
+        <select id="ai-provider" onchange="aiProvChange()">${Object.entries(AI_PROVIDERS).map(([k,v])=>`<option value="${k}" ${prov===k?"selected":""}>${v.label}</option>`).join("")}</select></div>
+      <div class="field" style="flex:1;min-width:200px"><label>Modelo</label>
+        <input id="ai-model" list="ai-models" value="${esc(c.model||"")}" placeholder="modelo"></div>
+      <datalist id="ai-models"></datalist>
+      <div class="field" style="min-width:100%"><label>API key (deixe vazio para manter a atual)</label>
+        <input id="ai-key" type="password" autocomplete="off" placeholder=""></div>
+      <button class="pill primary" onclick="saveAiCfg()">Salvar</button>
+      <button class="pill" onclick="testAi()" id="ai-test-btn">🔌 Testar conexão</button>
+      <button class="pill" onclick="analyzeNow()">✨ Analisar fila agora</button>
+      <button class="pill" onclick="reprocessAll()" title="Re-extrai o texto inteiro e refaz todos os resumos">♻ Reprocessar todas</button>
+    </div>
+    <p class="note hidden" id="ai-test-out"></p>
+    <p class="hint" id="ai-prov-hint" style="margin-top:4px"></p>
+  </div></div>`;
+  aiProvChange(true);
+}
+function aiProvChange(keepModel){
+  const k=document.getElementById("ai-provider").value, v=AI_PROVIDERS[k];
+  document.getElementById("ai-models").innerHTML=(v.models||[]).map(m=>`<option value="${m}">`).join("");
+  const mi=document.getElementById("ai-model");
+  if(!keepModel||!mi.value) mi.value=v.models[0]||"";
+  mi.disabled=(k==="heuristic");
+  document.getElementById("ai-key").placeholder=v.keyHint||"(não precisa de chave)";
+  document.getElementById("ai-key").disabled=(k==="heuristic");
+  document.getElementById("ai-prov-hint").innerHTML=
+    (v.note||"")+(v.keyUrl?` <a href="${v.keyUrl}" target="_blank" rel="noopener" style="color:var(--brand-d);font-weight:600">Obter chave ↗</a>`:"");
+}
+async function saveAiCfg(){
+  const r=await jsend("/api/ai-config","PUT",{
+    provider:document.getElementById("ai-provider").value,
+    model:document.getElementById("ai-model").value.trim(),
+    api_key:document.getElementById("ai-key").value});
+  alert("Configuração de IA salva. Motor ativo: "+(r.active||"?"));
+  renderAiCfg();
+}
+async function reprocessAll(){
+  if(!confirm("Recolocar TODAS as notícias na fila para re-extrair o texto inteiro e refazer os resumos?\nPode levar alguns minutos (clique em ✨ Analisar quantas vezes precisar até a fila zerar)."))return;
+  const r=await jsend("/api/reprocess","POST");
+  alert(`${r.requeued} notícia(s) na fila. Clique em ✨ Analisar para processar (em lotes).`);
+  renderAiCfg();
+}
+async function testAi(){
+  const b=document.getElementById("ai-test-btn"),out=document.getElementById("ai-test-out");
+  b.disabled=true;b.textContent="Testando...";
+  // salva antes de testar, para usar provedor/modelo/chave atuais do formulário
+  await jsend("/api/ai-config","PUT",{provider:document.getElementById("ai-provider").value,
+    model:document.getElementById("ai-model").value.trim(),api_key:document.getElementById("ai-key").value});
+  let r; try{ r=await jsend("/api/ai-test","POST"); }catch(e){ r={ok:false,message:"falha na requisição"}; }
+  out.classList.remove("hidden");
+  out.style.cssText=`margin-top:8px;background:${r.ok?"var(--brand-bg)":"#FBEAE8"};color:${r.ok?"var(--brand-d)":"#B42318"}`;
+  out.innerHTML=`${r.ok?"✅":"⚠️"} <b>${esc(r.engine||"?")} · ${esc(r.model||"?")}</b> — ${esc(r.message||"")}`;
+  b.disabled=false;b.textContent="🔌 Testar conexão";
+  document.getElementById("ai-key").value="";   // não reexibe a chave
+}
 
 showView("feed");
 </script>

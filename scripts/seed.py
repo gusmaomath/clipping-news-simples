@@ -1,6 +1,8 @@
-"""Cria fontes e abas de exemplo (com preferências e tags). Rode: python seed.py
+"""Cria fontes e abas de exemplo (com preferências e tags). Rode: python scripts/seed.py
 A aba 'Todas' aparece automaticamente quando existe ao menos uma aba."""
-import db
+import sys, pathlib
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent.parent))
+from clipping import db
 
 SOURCES = [
     ("InfoMoney – Mercados", "rss", "https://www.infomoney.com.br/mercados/feed/"),
@@ -33,7 +35,7 @@ def main():
         tid = db.add_tab(name, pref, bl); print("+ aba:", name)
         for tg, kw in tags:
             db.add_tag(tid, tg, kw); print("    tag:", tg)
-    print("\nPronto. Agora rode:  python app.py")
+    print("\nPronto. Agora rode:  python run.py")
 
 if __name__ == "__main__":
     main()

@@ -2,7 +2,7 @@
 Mostra uma representativa e esconde as redundantes (com contagem de fontes)."""
 import re
 from datetime import datetime, timezone
-from matching import norm
+from .matching import norm
 
 _WORD = re.compile(r"[a-z0-9]+")
 STOP = set("""a o as os um uma de do da dos das e ou que se na no nas nos para por com sem

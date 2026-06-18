@@ -9,7 +9,7 @@ GL = os.environ.get("NEWS_GL", "BR")
 CEID = os.environ.get("NEWS_CEID", "BR:pt-419")
 
 # Volume: puxa até este limite por fonte por execução
-MAX_PER_SOURCE = int(os.environ.get("NEWS_MAX_PER_SOURCE", "300"))
+MAX_PER_SOURCE = int(os.environ.get("NEWS_MAX_PER_SOURCE", "50"))
 MAX_WORKERS = int(os.environ.get("NEWS_MAX_WORKERS", "10"))
 
 # Proxy opcional para as requisições do scraper (ex.: http://user:pass@host:porta).

@@ -10,9 +10,9 @@ from datetime import datetime, timezone, timedelta
 import feedparser
 import httpx
 
-import config
-import db
-from matching import matches_any_word
+from . import config
+from . import db
+from .matching import matches_any_word
 
 _TAG = re.compile(r"<[^>]+>")
 _WS = re.compile(r"\s+")
